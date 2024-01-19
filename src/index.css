@@ -11,6 +11,59 @@
     /* font-family: 'Inter Tight', sans-serif; */
 }
 
-.showBorder{
+html {
+    font-size: 62.5%;
+    scroll-behavior: smooth;
+}
+
+
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input {
+    border: 1px solid #ccc; /* Add your desired border color */
+    padding: 8px; /* Optional: Add padding to make the input look more visually appealing */
+  }
+.showBorder {
     border: 1px solid black;
+}
+
+.line {
+    position: relative;
+}
+
+.line::after,
+.line::before {
+    content: "";
+    width: 50px;
+    height: 1px;
+    background-color: #a6a5a5;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 5px;
+}
+
+/* Modal.css */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.66);
+    display: flex;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }

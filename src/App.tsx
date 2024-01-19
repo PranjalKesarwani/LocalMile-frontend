@@ -29,8 +29,11 @@ function App() {
           <Route path='/admin-auth' element={<AdminAuthPage />} />
           <Route path='/delivery-auth' element={<DeliveryAuthPage />} />
           <Route path='/seller-dashboard' element={<SellerDashboard />} />
+          <Route path='/seller-dashboard/*' element={<SellerDashboard />} />
           <Route path='/admin-dashboard' element={<AdminDashboard />} />
+          <Route path='/admin-dashboard/*' element={<AdminDashboard />} />
           <Route path='/delivery-dashboard' element={<DeliveryDashboard />} />
+          <Route path='/delivery-dashboard/*' element={<DeliveryDashboard />} />
           <Route path='*' element={<ErrorPage />} />
 
 

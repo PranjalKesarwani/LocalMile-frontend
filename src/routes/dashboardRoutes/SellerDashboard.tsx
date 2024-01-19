@@ -1,5 +1,10 @@
-import React from 'react'
 import NavSeller from '../../components/seller/NavSeller'
+import { Link, Route, Routes } from 'react-router-dom'
+import AnalyticsSeller from '../../components/seller/AnalyticsSeller'
+import PushItems from '../../components/seller/PushItems'
+import AllItems from './AllItems'
+import Orders from './Orders'
+import Chats from './Chats'
 
 const SellerDashboard = () => {
   return (
@@ -10,25 +15,35 @@ const SellerDashboard = () => {
           <div className="w-full h-full bg-white rounded-lg ">
             <h1 className="text-center pt-3 font-medium  text-[1.5rem]">DASHBOARD</h1>
             <ul className=' flex flex-col gap-5 text-center p-3 uppercase  w-[90%] mx-auto'>
-                <li>Analytics</li>
-                <hr />
-                <li>Push Items</li>
-                <hr />
-                <li>All Items</li>
-                <hr />
-                <li>Chats</li>
-                <hr />
-                <li>Orders</li>
-                <hr />
+              <li><Link to={'/seller-dashboard/analytics'}>Analytics</Link></li>
+
+              <hr />
+
+              <li><Link to={'/seller-dashboard/push-items'}>Push Items</Link></li>
+              <hr />
+
+              <li><Link to={'/seller-dashboard/all-items'}>All Items</Link></li>
+
+              <hr />
+              <li><Link to={'/seller-dashboard/chats'}>Chats</Link></li>
+
+              <hr />
+              <li><Link to={'/seller-dashboard/orders'}>Orders</Link></li>
+              <hr />
             </ul>
 
           </div>
 
         </div>
         <div className=" w-[78%] h-full px-2 py-3 ">
-          <div className="w-full h-full bg-white rounded-lg ">
+          <Routes>
+            <Route path='/analytics' element={<AnalyticsSeller />} />
+            <Route path='/push-items' element={<PushItems />} />
+            <Route path='/all-items' element={<AllItems />} />
+            <Route path='/chats' element={<Chats />} />
+            <Route path='/orders' element={<Orders />} />
+          </Routes>
 
-          </div>
         </div>
 
       </div>
