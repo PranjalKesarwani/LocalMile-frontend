@@ -1,10 +1,10 @@
-import NavSeller from '../../components/seller/NavSeller'
-import { Link, Route, Routes } from 'react-router-dom'
-import AnalyticsSeller from '../../components/seller/AnalyticsSeller'
-import PushItems from '../../components/seller/PushItems'
-import AllItems from './AllItems'
-import Orders from './Orders'
-import Chats from './Chats'
+import NavSeller from '../../components/seller/NavSeller';
+import { Link, Route, Routes } from 'react-router-dom';
+import AnalyticsSeller from '../../components/seller/AnalyticsSeller';
+import PushItems from '../../components/seller/PushItems';
+import AllItems from './AllItems';
+import Orders from './Orders';
+import Chats from './Chats';
 
 const SellerDashboard = () => {
   return (
@@ -15,7 +15,7 @@ const SellerDashboard = () => {
           <div className="w-full h-full bg-white rounded-lg ">
             <h1 className="text-center pt-3 font-medium  text-3xl">DASHBOARD</h1>
             <ul className=' flex flex-col gap-5 text-center p-3 uppercase  w-[90%] mx-auto text-2xl mt-12'>
-              <li><Link to={'/seller-dashboard/analytics'}>Analytics</Link></li>
+              <li><Link to={'/seller-dashboard'}>Analytics</Link></li>
 
               <hr />
 
@@ -37,7 +37,7 @@ const SellerDashboard = () => {
         </div>
         <div className=" w-[78%] h-full px-2 py-3 ">
           <Routes>
-            <Route path='/analytics' element={<AnalyticsSeller />} />
+            <Route path='/' element={<AnalyticsSeller />} />
             <Route path='/push-items' element={<PushItems />} />
             <Route path='/all-items' element={<AllItems />} />
             <Route path='/chats' element={<Chats />} />

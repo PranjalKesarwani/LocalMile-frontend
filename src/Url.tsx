@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://localhost:5000';
+export const BASE_URL = 'http://localhost:8000';
 // export const BASE_SOCKET_URL = 'https://heyamigo.onrender.com'
 // export const BASE_URL = 'https://heyamigo.onrender.com';
 // export const BASE_SOCKET_URL = 'https://heyamigov2s.onrender.com'

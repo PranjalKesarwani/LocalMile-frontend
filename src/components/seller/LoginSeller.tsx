@@ -2,22 +2,12 @@ import axios from 'axios';
 import React, { useState } from 'react'
 import { BASE_URL, post_config } from '../../Url';
 import Modal from '../../shared/Modal';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-
-
-type TForm = {
-
-    phone: string;
-}
-
-let obj: TForm = {
-
-    phone: ""
-}
 const LoginSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.SetStateAction<boolean>> }) => {
-    const [form, setForm] = useState<TForm>(obj);
+    const [form, setForm] = useState<{phone: string}>({phone:""});
     const [modalOpen, setModalOpen] = useState<boolean>(false);
+    const navigate = useNavigate();
 
     const handleOpenModal = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -28,9 +18,33 @@ const LoginSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.Se
         setModalOpen(false);
     };
     const handleSubmitOTP = async () => {
-        console.log(form);
-        const res = await axios.post(`${BASE_URL}/auth/seller-login`, form, post_config);
-        console.log(res.data)
+      
+        try {
+            const res = await axios.post(`${BASE_URL}/auth/seller-login`, form, post_config);
+            if(res.status === 203){
+                
+                alert('Your request is being processed! Wait for some time or contact 9982520785');
+                console.log(res.data);
+            }
+            if(res.status === 200){
+                
+                alert('Login successful');
+                navigate('/seller-dashboard')
+                console.log(res.data);
+            }
+          
+        } catch (error:any) {
+            if (error.response && error.response.status === 404) {
+                alert('Account doesn not exist! Please contact at 9982520785!');
+    
+            } else if(error.response && error.response.status === 500){
+                alert('Internal Server Error! Please try after some time');
+            }else{
+                alert('An error occurred. Please try again.');
+    
+            }
+        }
+
     }
     return (
         <div className="w-screen h-screen flex items-center justify-center text-[1.6rem]">
@@ -39,7 +53,7 @@ const LoginSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.Se
 
                 <h2 className='text-center '>OTP sent at 9982520785!</h2>
                 <div className=" h-[80%] flex flex-col items-center justify-evenly text-center">
-                    <label className="w-full flex flex-col gap-1 " htmlFor="otp">Fill OTP <input className="p-2 rounded-md" autoComplete="on" placeholder="4-digit OTP" type="number" name="phone" pattern="[0-9]{10}" maxLength={10} minLength={10} value={form.phone} onChange={((e) => setForm({ ...form, phone: e.target.value }))} required /></label>
+                    <label className="w-full flex flex-col gap-1 " htmlFor="otp">Fill OTP <input className="p-2 rounded-md" autoComplete="on" placeholder="6-digit OTP" type="number" name="phone" pattern="[0-9]{6}" maxLength={6} minLength={6}  required /></label>
                     <button className='bg-violet-600 text-white px-2 py-1 rounded-lg text-2xl w-44 ' onClick={handleSubmitOTP}>Submit OTP</button>
 
                 </div>
@@ -56,7 +70,7 @@ const LoginSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.Se
                     <h1 className="line">OR</h1>
                     <form onSubmit={handleOpenModal} className="flex flex-col items-start justify-center p-3 gap-8 w-full" >
 
-                        <label className="w-full flex flex-col gap-1 " htmlFor="phone">Seller Phone No.<input className="p-2 rounded-md" autoComplete="on" placeholder="10-digit Phone number" type="tel" name="phone" pattern="[0-9]{10}" maxLength={10} minLength={10} required /></label>
+                        <label className="w-full flex flex-col gap-1 " htmlFor="phone">Seller Phone No.<input className="p-2 rounded-md" autoComplete="on" placeholder="10-digit Phone number" type="tel" name="phone" pattern="[0-9]{10}" maxLength={10} minLength={10} value={form.phone} onChange={((e) => setForm({ ...form, phone: e.target.value }))} required /></label>
 
                         <button type="submit" className="rounded-lg w-full text-2xl p-2 bg-indigo-600  text-white">
                             Log In

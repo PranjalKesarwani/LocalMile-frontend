@@ -6,13 +6,22 @@ import { Link } from 'react-router-dom';
 
 
 type TForm = {
-    buyerName: string;
+    sellerName: string;
+    shopName:string;
+    shopAddress:string;
+    landmark:string;
+    pinCode:string;
     phone: string;
+    
 }
 
 let obj: TForm = {
-    buyerName: "",
-    phone: ""
+    sellerName: "",
+    shopName:"",
+    shopAddress:"",
+    landmark:"",
+    pinCode:"",
+    phone: "",
 }
 
 const SignupSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.SetStateAction<boolean>> }) => {
@@ -28,9 +37,26 @@ const SignupSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.S
         setModalOpen(false);
     };
     const handleSubmitOTP = async () => {
-        console.log(form);
-        const res = await axios.post(`${BASE_URL}/auth/seller-signup`, form, post_config);
-        console.log(res.data);
+      
+        try {
+            const res = await axios.post(`${BASE_URL}/auth/seller-signup`, form, post_config);
+            if(res.status === 201){
+                
+                alert('Request accepted! Please wait for admin approval or contact: 9982520785')
+                console.log(res.data);
+            }
+
+        } catch (error:any) {
+            if (error.response && error.response.status === 409) {
+                alert('Account already exists. Please contact to admin: 9982520785.');
+    
+            } else if(error.response && error.response.status === 500){
+                alert('Internal Server Error! Please try after some time');
+            }else{
+                alert('An error occurred. Please try again.');
+
+            }
+        }
     }
     return (
         <div className="w-screen h-screen flex items-center justify-center text-[1.6rem] ">
@@ -60,11 +86,11 @@ const SignupSeller = ({ setToggleAuth }: { setToggleAuth: React.Dispatch<React.S
 
                     <form onSubmit={handleOpenModal} className="  flex flex-col items-start justify-center p-3 gap-4 w-full text-2xl" >
 
-                        <label className="w-full flex flex-col gap-1 " htmlFor="sellerName" >Seller Name<input className="p-2 rounded-md " placeholder="Seller Name" type="text" name="sellerName" id="sellerName" value={form.buyerName} onChange={((e) => setForm({ ...form, buyerName: e.target.value }))} required /></label>
-                        <label className="w-full flex flex-col gap-1" htmlFor="shopName" >Shop Name<input className="p-2 rounded-md " placeholder="Shop Name" type="text" name="shopName" id="shopName" value={form.buyerName} onChange={((e) => setForm({ ...form, buyerName: e.target.value }))} required /></label>
-                        <label className="w-full flex flex-col gap-1" htmlFor="shopAddress" >Shop Address<input className="p-2 rounded-md " placeholder="Shop Address" type="text" name="shopAddress" id="shopAddress" value={form.buyerName} onChange={((e) => setForm({ ...form, buyerName: e.target.value }))} required /></label>
-                        <label className="w-full flex flex-col gap-1" htmlFor="pinCode" >Pin Code<input className="p-2 rounded-md " placeholder="Pin Code" type="text" name="pinCode" id="pinCode" value={form.buyerName} onChange={((e) => setForm({ ...form, buyerName: e.target.value }))} required /></label>
-                        <label className="w-full flex flex-col gap-1" htmlFor="landmark" >Landmark<input className="p-2 rounded-md " placeholder="Landmark" type="text" name="landmark" id="landmark" value={form.buyerName} onChange={((e) => setForm({ ...form, buyerName: e.target.value }))} required /></label>
+                        <label className="w-full flex flex-col gap-1 " htmlFor="sellerName" >Seller Name<input className="p-2 rounded-md " placeholder="Seller Name" type="text" name="sellerName" id="sellerName" value={form.sellerName} onChange={((e) => setForm({ ...form, sellerName: e.target.value }))} required /></label>
+                        <label className="w-full flex flex-col gap-1" htmlFor="shopName" >Shop Name<input className="p-2 rounded-md " placeholder="Shop Name" type="text" name="shopName" id="shopName" value={form.shopName} onChange={((e) => setForm({ ...form, shopName: e.target.value }))} required /></label>
+                        <label className="w-full flex flex-col gap-1" htmlFor="shopAddress" >Shop Address<input className="p-2 rounded-md " placeholder="Shop Address" type="text" name="shopAddress" id="shopAddress" value={form.shopAddress} onChange={((e) => setForm({ ...form, shopAddress: e.target.value }))} required /></label>
+                        <label className="w-full flex flex-col gap-1" htmlFor="pinCode" >Pin Code<input className="p-2 rounded-md " placeholder="Pin Code" type="text" name="pinCode" id="pinCode" value={form.pinCode} onChange={((e) => setForm({ ...form, pinCode: e.target.value }))} required /></label>
+                        <label className="w-full flex flex-col gap-1" htmlFor="landmark" >Landmark<input className="p-2 rounded-md " placeholder="Landmark" type="text" name="landmark" id="landmark" value={form.landmark} onChange={((e) => setForm({ ...form, landmark: e.target.value }))} required /></label>
 
                         <label className="w-full flex flex-col gap-1 " htmlFor="phone">Seller Phone no.<input className="p-2 rounded-md " autoComplete="on" placeholder="10-digit Phone number" type="tel" id="phone" name="phone" pattern="[0-9]{10}" maxLength={10} minLength={10} value={form.phone} onChange={((e) => setForm({ ...form, phone: e.target.value }))} required /></label>
 
