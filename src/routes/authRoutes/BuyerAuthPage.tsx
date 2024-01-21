@@ -4,7 +4,7 @@ import LoginBuyer from "../../components/buyer/LoginBuyer";
 import Modal from "../../shared/Modal";
 
 const BuyerAuthPage = () => {
-    const [toggleAuth, setToggleAuth] = useState<boolean>(true);
+    const [toggleAuth, setToggleAuth] = useState<boolean>(false);
 
 
 
@@ -41,8 +41,6 @@ const BuyerAuthPage = () => {
 
 
 
-            {/* <Link to="/buyer-landing">Go to Buyer Landing Page</Link>
-            <Link to="/seller-auth">Others</Link> */}
 
 
 
