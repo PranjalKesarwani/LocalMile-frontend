@@ -23,17 +23,17 @@ function App() {
 
         <Routes>
           <Route path='/' element={<WaitForUserAuth />} />
+          <Route path='/seller-dashboard/*' element={<SellerDashboard />} />
+          <Route path='/admin-dashboard/*' element={<AdminDashboard />} />
+          {/* <Route path='/delivery-dashboard' element={<DeliveryDashboard />} /> */}
+          <Route path='/delivery-dashboard/*' element={<DeliveryDashboard />} />
           <Route path='/buyer-auth' element={<BuyerAuthPage />} />
           <Route path='/buyer-landing' element={<BuyerLandingPage />} />
           <Route path='/seller-auth' element={<SellerAuthPage />} />
           <Route path='/admin-auth' element={<AdminAuthPage />} />
           <Route path='/delivery-auth' element={<DeliveryAuthPage />} />
           <Route path='/seller-dashboard' element={<SellerDashboard />} />
-          <Route path='/seller-dashboard/*' element={<SellerDashboard />} />
-          <Route path='/admin-dashboard' element={<AdminDashboard />} />
-          <Route path='/admin-dashboard/*' element={<AdminDashboard />} />
-          <Route path='/delivery-dashboard' element={<DeliveryDashboard />} />
-          <Route path='/delivery-dashboard/*' element={<DeliveryDashboard />} />
+          {/* <Route path='/admin-dashboard' element={<AdminDashboard />} /> */}
           <Route path='*' element={<ErrorPage />} />
 
 

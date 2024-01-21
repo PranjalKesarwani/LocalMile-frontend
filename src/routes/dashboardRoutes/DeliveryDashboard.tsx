@@ -13,9 +13,9 @@ const DeliveryDashboard = () => {
       <div className=" h-full bg-slate-200 w-full flex items-center justify-between p-2">
         <div className=" w-[22%] h-full px-2 py-3 ">
           <div className="w-full h-full bg-white rounded-lg ">
-            <h1 className="text-center pt-3 font-medium  text-[1.5rem]">DASHBOARD-DELIVERY</h1>
-            <ul className=' flex flex-col gap-5 text-center p-3 uppercase  w-[90%] mx-auto'>
-              <li><Link to={'/delivery-dashboard/pending-orders'}>Pending Orders</Link></li>
+            <h1 className="text-center pt-3 font-medium  text-3xl">DASHBOARD-DELIVERY</h1>
+            <ul className=' flex flex-col gap-5 text-center p-3 uppercase  w-[90%] mx-auto text-2xl mt-12'>
+              <li><Link to={'/delivery-dashboard'}>Pending Orders</Link></li>
 
               <hr />
               <li> <Link to={'/delivery-dashboard/completed-orders'}>Completed Orders</Link></li>
@@ -36,7 +36,8 @@ const DeliveryDashboard = () => {
         </div>
         <div className=" w-[78%] h-full px-2 py-3 ">
           <Routes>
-            <Route path='/pending-orders' element={<PendingOrders />} />
+      
+            <Route path='/' element={<PendingOrders />} />
             <Route path='/completed-orders' element={<CompletedOrders />} />
             <Route path='/total-orders' element={<TotalOrders />} />
             <Route path='/cancelled-orders' element={<CancelledOrders />} />

@@ -4,17 +4,7 @@ import LoginBuyer from "../../components/buyer/LoginBuyer";
 import Modal from "../../shared/Modal";
 
 const BuyerAuthPage = () => {
-    const [toggleAuth, setToggleAuth] = useState<boolean>(false);
-
-
-
-
-
-
-
-
-
-
+    const [toggleAuth, setToggleAuth] = useState<boolean>(true);
 
     return (
         <>

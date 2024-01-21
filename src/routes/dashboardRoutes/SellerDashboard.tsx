@@ -13,8 +13,8 @@ const SellerDashboard = () => {
       <div className=" h-full bg-slate-200 w-full flex items-center justify-between p-2">
         <div className=" w-[22%] h-full px-2 py-3 ">
           <div className="w-full h-full bg-white rounded-lg ">
-            <h1 className="text-center pt-3 font-medium  text-[1.5rem]">DASHBOARD</h1>
-            <ul className=' flex flex-col gap-5 text-center p-3 uppercase  w-[90%] mx-auto'>
+            <h1 className="text-center pt-3 font-medium  text-3xl">DASHBOARD</h1>
+            <ul className=' flex flex-col gap-5 text-center p-3 uppercase  w-[90%] mx-auto text-2xl mt-12'>
               <li><Link to={'/seller-dashboard/analytics'}>Analytics</Link></li>
 
               <hr />
