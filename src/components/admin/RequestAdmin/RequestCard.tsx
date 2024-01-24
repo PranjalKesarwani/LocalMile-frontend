@@ -1,14 +1,59 @@
-import React from 'react'
+import axios from 'axios';
+import React, { useState } from 'react'
+import { BASE_URL, post_config } from '../../../Url';
 
 type TProps = {
-    handleAddCategory:(category: string) => void;
-    handleAcceptApproval:() => Promise<void>
-    selectedCategories:string[];
-    handleRemoveCategory:(category: string, idx: number) => void;
+    // handleAddCategory:(category: string) => void;
+    // handleAcceptApproval:() => Promise<void>
+    // selectedCategories:string[];
+    // handleRemoveCategory:( idx: number) => void;
     availableCategories:string[]
 }
 
-const RequestCard = ({handleAddCategory,handleAcceptApproval,selectedCategories,handleRemoveCategory,availableCategories}:TProps) => {
+const RequestCard = ({availableCategories}:TProps) => {
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const handleRemoveCategory = ( idx: number) => {
+
+
+    selectedCategories.splice(idx, 1);
+    setSelectedCategories((prev) => {
+      return [...prev]
+    });
+
+  }
+
+  const handleAddCategory = (category: string) => {
+    for (let i = 0; i < selectedCategories.length; i++) {
+      if (selectedCategories[i] === category) {
+        alert('Category already added');
+        return
+      }
+    }
+
+    setSelectedCategories((prev) => {
+
+      return [...prev, category] as string[]
+    })
+  }
+
+  const handleAcceptApproval = async () => {
+
+    if (selectedCategories.length === 0) {
+      alert('Select atleast one category!');
+      return;
+    }
+    try {
+      const res = await axios.put(`${BASE_URL}/auth/seller-request-approval`,{selectedCategories},post_config);
+      console.log(res.data);
+
+    } catch (error) {
+
+    }
+  }
+
+
   return (
     <div className=" w-full p-2 flex flex-col gap-4 border-[1px] border-gray-400 rounded-md">
 
@@ -31,7 +76,7 @@ const RequestCard = ({handleAddCategory,handleAcceptApproval,selectedCategories,
               selectedCategories.length === 0 ? <><div className="w-full text-5xl text-gray-400">Select atleast 1 category</div></>:(
                 selectedCategories.map((category, idx) => {
                   return (
-                    <div key={idx} className="border border-gray-300 min-w-[15rem] text-center p-2 rounded cursor-pointer flex justify-between bg-green-200 gap-5"><span className="">{category} </span><span className="   rounded-full hover:bg-red-700 hover:text-white w-[2rem] h-[2rem] flex items-center justify-center" onClick={() => handleRemoveCategory(category, idx)}><i className="fa-solid fa-xmark"></i></span></div>
+                    <div key={idx} className="border border-gray-300 min-w-[15rem] text-center p-2 rounded cursor-pointer flex justify-between bg-green-200 gap-5"><span className="">{category} </span><span className="   rounded-full hover:bg-red-700 hover:text-white w-[2rem] h-[2rem] flex items-center justify-center" onClick={() => handleRemoveCategory( idx)}><i className="fa-solid fa-xmark"></i></span></div>
   
                   )
                 })
