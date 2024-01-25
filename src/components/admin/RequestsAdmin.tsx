@@ -1,52 +1,74 @@
 import axios from "axios";
-import { useState } from "react";
-import { BASE_URL } from "../../Url";
+import { useEffect, useState } from "react";
+import { BASE_URL, get_config } from "../../Url";
 import RequestCard from "./RequestAdmin/RequestCard";
+
+
+export type Requests = {
+  activeSessions: string[];
+  adminApproval: boolean;
+  sellerName: string
+  shopName: string;
+  chosenCategories: string[];
+  landmark: string;
+  phone: string;
+  pic: string;
+  createdAt: string;
+  updatedAt: string;
+  pinCode: string;
+  role: string;
+  shopAddress: string;
+  _id: string
+}
+
+export type TCategory = {
+  message:string;
+  pinCode:string;
+  shopCategories:string[];
+  _id:string;
+  createdAt:string;
+  updatedAt:string
+}
 
 const RequestsAdmin = () => {
 
   const marketAreaPinCodes = ['221507', '221508', '221509', '221510'];
-  const availableCategories = ['Cloths', 'Gifts', 'Goggles & Spectacles', 'Shoes', 'Matty'];
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // const availableCategories = ['Cloths', 'Gifts', 'Goggles & Spectacles', 'Shoes', 'Matty'];
+  const [requests, setRequests] = useState<Requests[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
 
-  // const handleAddCategory = (category: string) => {
-  //   for (let i = 0; i < selectedCategories.length; i++) {
-  //     if (selectedCategories[i] === category) {
-  //       alert('Category already added');
-  //       return
-  //     }
-  //   }
-
-  //   setSelectedCategories((prev) => {
-
-  //     return [...prev, category] as string[]
-  //   })
-  // }
-
-  // const handleRemoveCategory = ( idx: number) => {
 
 
-  //   selectedCategories.splice(idx, 1);
-  //   setSelectedCategories((prev) => {
-  //     return [...prev]
-  //   });
+  const getAllRequests = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/auth/get-seller-requests`, get_config);
+      console.log(res.data);
+      setRequests(res.data);
 
-  // }
+    } catch (error) {
 
-  // const handleAccpetApproval = async () => {
+    }
+  }
 
-  //   if (selectedCategories.length === 0) {
-  //     alert('Select atleast one category!');
-  //     return;
-  //   }
-  //   try {
-  //     const res = await axios.put(`${BASE_URL}/auth/seller-request-approval`);
+  const availableCategoriess = async () => {
+    console.log('hello')
+    try {
+      const res = await axios.get(`${BASE_URL}/pin/get-available-categories`, get_config);
+      if (res.status === 200) {
+        console.log(res.data);
+        setAvailableCategories(()=>[...res.data.shopCategories]);
+      }
 
-  //   } catch (error) {
+    } catch (error) {
+      console.log(error);
+      alert('Internal server error!');
+    }
+  }
 
-  //   }
-  // }
+  useEffect(() => {
+    getAllRequests();
+  }, [])
 
   return (
     <div className="w-full h-full bg-white rounded-lg flex flex-col p-3  gap-3">
@@ -68,61 +90,33 @@ const RequestsAdmin = () => {
 
           </ul>
         </div>
+
         <hr />
-        {/* <div className=" w-full p-2 text-xl flex flex-col gap-2 mt-2 ">
-        <h1 className=" ml-4">Available shop categories for 221507</h1>
-        <ul className=" flex overflow-x-auto space-x-4 p-4">
-          {
-            availableCategories.map((category, idx) => {
-              return (
-                <div key={idx} className="border border-gray-300 min-w-[15rem] text-center p-2 rounded">{category}</div>
+        <div className=" w-full p-2  ">
+          <button className="bg-red-600 text-white text-2xl px-2 py-1 rounded-md" onClick={()=>availableCategoriess()}>Fetch available categories(221507)</button>
+        </div>
 
-              )
-            })
-          }
-
-
-
-        </ul>
-
-      </div> */}
 
         <hr />
       </div>
 
-      {/* <div className="w-full overflow-hidden "> */}
-      <div className="w-full h-[53rem] overflow-y-auto  space-y-5  overflow-hidden ">
-        <RequestCard
-          // handleAddCategory={handleAddCategory}
-          // handleAcceptApproval={handleAccpetApproval}
-          // selectedCategories={selectedCategories}
-          // handleRemoveCategory={handleRemoveCategory}
-          availableCategories={availableCategories}
-        />
-        <RequestCard
-          // handleAddCategory={handleAddCategory}
-          // handleAcceptApproval={handleAccpetApproval}
-          // selectedCategories={selectedCategories}
-          // handleRemoveCategory={handleRemoveCategory}
-          availableCategories={availableCategories}
-        />
-        <RequestCard
-          // handleAddCategory={handleAddCategory}
-          // handleAcceptApproval={handleAccpetApproval}
-          // selectedCategories={selectedCategories}
-          // handleRemoveCategory={handleRemoveCategory}
-          availableCategories={availableCategories}
-        />
-        <RequestCard
-          // handleAddCategory={handleAddCategory}
-          // handleAcceptApproval={handleAccpetApproval}
-          // selectedCategories={selectedCategories}
-          // handleRemoveCategory={handleRemoveCategory}
-          availableCategories={availableCategories}
-        />
+
+      <div className="w-full h-[53rem] overflow-y-auto  space-y-5  overflow-hidden mt-3">
+        {
+          requests.map((request) => {
+            return (
+              <RequestCard
+                key={request._id}
+                request={request}
+                availableCategories={availableCategories}
+              />
+            )
+          })
+        }
+
 
       </div>
-      {/* </div> */}
+
 
 
 

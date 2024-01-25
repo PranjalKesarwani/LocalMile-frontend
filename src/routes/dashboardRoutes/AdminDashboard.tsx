@@ -5,6 +5,7 @@ import AnalyticsAdmin from '../../components/admin/AnalyticsAdmin'
 import DeliveryAdmin from '../../components/admin/DeliveryAdmin'
 import RequestsAdmin from '../../components/admin/RequestsAdmin'
 import AllSellersAdmin from '../../components/admin/AllSellersAdmin'
+import ShopCategoriesForm from '../../components/admin/shopCategoriesForm.tsx/ShopCategoriesForm'
 
 const AdminDashboard = () => {
   return (
@@ -19,6 +20,8 @@ const AdminDashboard = () => {
                 
                 <hr />
                 <li><Link to={'/admin-dashboard/delivery-manager'}>Delivery Manager</Link></li>
+                <hr />
+                <li><Link to={'/admin-dashboard/shop-category-manager'}>Manage Shop Categories</Link></li>
                 <hr />
                 <li><Link to={'/admin-dashboard/all-requests'}>all requests</Link></li>
               
@@ -35,6 +38,7 @@ const AdminDashboard = () => {
         <div className=" w-[78%] h-full px-2 py-3 ">
         <Routes>
             <Route path='/' element={<AnalyticsAdmin />} />
+            <Route path='/shop-category-manager' element={<ShopCategoriesForm />} />
             <Route path='/delivery-manager' element={<DeliveryAdmin />} />
             <Route path='/all-requests' element={<RequestsAdmin />} />
             <Route path='/all-sellers' element={<AllSellersAdmin />} />
