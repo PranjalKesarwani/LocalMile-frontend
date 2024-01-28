@@ -11,9 +11,14 @@
     /* font-family: 'Inter Tight', sans-serif; */
 }
 
+body{
+    font-size: 1.6rem;
+}
+
 html {
     font-size: 62.5%;
     scroll-behavior: smooth;
+    height: auto;
 }
 
 
@@ -25,9 +30,12 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 input {
-    border: 1px solid #ccc; /* Add your desired border color */
-    padding: 8px; /* Optional: Add padding to make the input look more visually appealing */
-  }
+    border: 1px solid #ccc;
+    /* Add your desired border color */
+    padding: 8px;
+    /* Optional: Add padding to make the input look more visually appealing */
+}
+
 .showBorder {
     border: 1px solid black;
 }
@@ -67,3 +75,21 @@ input {
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+.y-scrollbar {
+    scrollbar-width: thin;
+}
+
+.y-scrollbar::-webkit-scrollbar {
+    width: 0px;
+    height: 0;
+}
+
+
+.y-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
+    border-radius: 8px;
+    
+
+}
+

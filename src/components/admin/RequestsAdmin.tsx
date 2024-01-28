@@ -52,7 +52,6 @@ const RequestsAdmin = () => {
   }
 
   const availableCategoriess = async () => {
-    console.log('hello')
     try {
       const res = await axios.get(`${BASE_URL}/pin/get-available-categories`, get_config);
       if (res.status === 200) {
