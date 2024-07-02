@@ -42,7 +42,7 @@ const RequestsAdmin = () => {
 
   const getAllRequests = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/auth/get-seller-requests`, get_config);
+      const res = await axios.get(`${BASE_URL}/auth/get-seller-requests`);
       console.log(res.data);
       setRequests(res.data);
 
@@ -53,10 +53,10 @@ const RequestsAdmin = () => {
 
   const availableCategoriess = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/pin/get-available-categories`, get_config);
+      const res = await axios.get(`${BASE_URL}/pin/get-available-categories`);
       if (res.status === 200) {
         console.log(res.data);
-        setAvailableCategories(()=>[...res.data.shopCategories]);
+        // setAvailableCategories(()=>[...res.data.shopCategories]);
       }
 
     } catch (error) {

@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'
-import { BASE_URL, post_config } from '../../Url';
-import Modal from '../../shared/Modal';
+import { BASE_URL } from '../../Url';
+// import Modal from '../../shared/Modal';
 
 // type TForm = {
 
@@ -18,18 +18,19 @@ const AdminAuthPage = () => {
     const [modalOpen, setModalOpen] = useState<boolean>(false);
     const navigate = useNavigate();
   
-    const handleOpenModal = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setModalOpen(true);
-    };
+    // const handleOpenModal = (e: React.FormEvent<HTMLFormElement>) => {
+    //   e.preventDefault();
+    //   setModalOpen(true);
+    // };
   
-    const handleCloseModal = () => {
-      setModalOpen(false);
-    };
-    const handleSubmitOTP = async () => {
+    // const handleCloseModal = () => {
+    //   setModalOpen(false);
+    // };
+    const handleSubmitOTP = async (e:any) => {
+      e.preventDefault();
    
       try {
-        const res = await axios.post(`${BASE_URL}/auth/admin-login`, form, post_config);
+        const res = await axios.post(`${BASE_URL}/auth/admin-login`, form);
         if (res.status === 200) {
           console.log('Logged In', res.data);
           navigate('/admin-dashboard');
@@ -37,7 +38,7 @@ const AdminAuthPage = () => {
         }
       } catch (error:any) {
         if (error.response && error.response.status === 404) {
-          alert('Account does not exists. Please signup!');
+          alert("Only Admin can login here!!! haha");
   
         } else if (error.response && error.response.status === 500) {
           alert('Internal Server Error! Please try after some time');
@@ -50,7 +51,7 @@ const AdminAuthPage = () => {
     return (
       <div className="w-screen h-screen flex items-center justify-center text-[1.6rem]">
   
-        <Modal isOpen={modalOpen} onClose={handleCloseModal}>
+        {/* <Modal isOpen={modalOpen} onClose={handleCloseModal}>
   
           <h2 className='text-center '>OTP sent at 9982520785!</h2>
           <div className=" h-[80%] flex flex-col items-center justify-evenly text-center">
@@ -61,12 +62,12 @@ const AdminAuthPage = () => {
           <div className="flex justify-end">
             <button className='bg-red-600 text-white px-2 py-1 rounded-lg ' onClick={handleCloseModal}>Close</button>
           </div>
-        </Modal>
+        </Modal> */}
   
         <div className=" w-full h-full flex flex-col items-center justify-center p-10  max-w-[1700px] bg-[#eceff8] ">
   
           <div className=" flex flex-col items-center justify-center   p-3   rounded-lg w-[35rem] h-[35rem] shadow-lg">
-            <form onSubmit={handleOpenModal} className="flex flex-col items-start justify-center p-3 gap-8 w-full" >
+            <form onSubmit={handleSubmitOTP} className="flex flex-col items-start justify-center p-3 gap-8 w-full" >
               <h1 className="text-center text-2xl  w-full">For Owner of App</h1>
               <label className="w-full flex flex-col gap-1 " htmlFor="phone">Phone <input className="p-2 rounded-md" autoComplete="on" placeholder="10-digit Phone number" type="tel" name="phone" pattern="[0-9]{10}" maxLength={10} minLength={10} value={form.phone} onChange={((e) => setForm({ ...form, phone: e.target.value }))} required /></label>
   

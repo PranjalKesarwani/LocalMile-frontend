@@ -5,7 +5,7 @@ const WaitForUserAuth = () => {
 const navigate = useNavigate();
 
 setTimeout(()=>{
-    navigate('/buyer-auth');
+    navigate('/admin-auth');
 },4000)
 
     return (
