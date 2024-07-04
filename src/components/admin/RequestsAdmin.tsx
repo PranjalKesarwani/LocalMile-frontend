@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { BASE_URL, get_config } from "../../Url";
+import { BASE_URL } from "../../Url";
 import RequestCard from "./RequestAdmin/RequestCard";
 
 
@@ -55,8 +55,8 @@ const RequestsAdmin = () => {
     try {
       const res = await axios.get(`${BASE_URL}/pin/get-available-categories`);
       if (res.status === 200) {
-        console.log(res.data);
-        // setAvailableCategories(()=>[...res.data.shopCategories]);
+        console.log("List of available categories:::::::",res.data.allCategories);
+        setAvailableCategories(()=>[...res.data.allCategories]);
       }
 
     } catch (error) {
@@ -67,6 +67,7 @@ const RequestsAdmin = () => {
 
   useEffect(() => {
     getAllRequests();
+    availableCategoriess()
   }, [])
 
   return (
@@ -91,9 +92,7 @@ const RequestsAdmin = () => {
         </div>
 
         <hr />
-        <div className=" w-full p-2  ">
-          <button className="bg-red-600 text-white text-2xl px-2 py-1 rounded-md" onClick={()=>availableCategoriess()}>Fetch available categories(221507)</button>
-        </div>
+   
 
 
         <hr />

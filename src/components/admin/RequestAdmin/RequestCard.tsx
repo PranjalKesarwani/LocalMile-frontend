@@ -49,8 +49,9 @@ const RequestCard = ({ availableCategories, request }: TProps) => {
       return;
     }
     try {
-      const res = await axios.put(`${BASE_URL}/auth/seller-request-approval`, { selectedCategories, sellerId: request._id }, post_config);
+      const res = await axios.put(`${BASE_URL}/auth/seller-request-approval`, { selectedCategories, sellerId: request._id });
       console.log(res.data);
+      alert("Approved")
 
     } catch (error) {
 
