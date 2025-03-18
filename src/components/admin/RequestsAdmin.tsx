@@ -3,11 +3,10 @@ import { useEffect, useState } from "react";
 import { BASE_URL } from "../../Url";
 import RequestCard from "./RequestAdmin/RequestCard";
 
-
 export type Requests = {
   activeSessions: string[];
   adminApproval: boolean;
-  sellerName: string
+  sellerName: string;
   shopName: string;
   chosenCategories: string[];
   landmark: string;
@@ -18,112 +17,91 @@ export type Requests = {
   pinCode: string;
   role: string;
   shopAddress: string;
-  _id: string
-}
+  _id: string;
+};
 
 export type TCategory = {
-  message:string;
-  pinCode:string;
-  shopCategories:string[];
-  _id:string;
-  createdAt:string;
-  updatedAt:string
-}
+  message: string;
+  pinCode: string;
+  shopCategories: string[];
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 const RequestsAdmin = () => {
-
-  const marketAreaPinCodes = ['221507', '221508', '221509', '221510'];
+  const marketAreaPinCodes = ["221507", "221508", "221509", "221510"];
   // const availableCategories = ['Cloths', 'Gifts', 'Goggles & Spectacles', 'Shoes', 'Matty'];
   const [requests, setRequests] = useState<Requests[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-
-
-
 
   const getAllRequests = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/auth/get-seller-requests`);
       console.log(res.data);
       setRequests(res.data);
-
-    } catch (error) {
-
-    }
-  }
+    } catch (error) {}
+  };
 
   const availableCategoriess = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/pin/get-available-categories`);
       if (res.status === 200) {
-        console.log("List of available categories:::::::",res.data.allCategories);
-        setAvailableCategories(()=>[...res.data.allCategories]);
+        console.log(
+          "List of available categories:::::::",
+          res.data.allCategories
+        );
+        setAvailableCategories(() => [...res.data.allCategories]);
       }
-
     } catch (error) {
       console.log(error);
-      alert('Internal server error!');
+      // alert('Internal server error!');
     }
-  }
+  };
 
   useEffect(() => {
     getAllRequests();
-    availableCategoriess()
-  }, [])
+    availableCategoriess();
+  }, []);
 
   return (
     <div className="w-full h-full bg-white rounded-lg flex flex-col p-3  gap-3">
       <div className="w-full h-[8rem] ">
-
-
         <h1 className="text-4xl font-semibold text-gray-600">All Requests</h1>
         <hr />
         <div className=" w-full p-2  ">
           <ul className=" flex gap-2 justify-evenly text-xl">
-            {
-              marketAreaPinCodes.map((pin, idx) => {
-                return (
-                  <li key={idx} className="border-[1px] border-black rounded-full px-2 py-1 min-w-[12rem] text-center">{pin}</li>
-
-                )
-              })
-            }
-
+            {marketAreaPinCodes.map((pin, idx) => {
+              return (
+                <li
+                  key={idx}
+                  className="border-[1px] border-black rounded-full px-2 py-1 min-w-[12rem] text-center"
+                >
+                  {pin}
+                </li>
+              );
+            })}
           </ul>
         </div>
 
         <hr />
-   
-
 
         <hr />
       </div>
 
-
       <div className="w-full h-[53rem] overflow-y-auto  space-y-5  overflow-hidden mt-3">
-        {
-          requests.map((request) => {
-            return (
-              <RequestCard
-                key={request._id}
-                request={request}
-                availableCategories={availableCategories}
-              />
-            )
-          })
-        }
-
-
+        {requests.map((request) => {
+          return (
+            <RequestCard
+              key={request._id}
+              request={request}
+              availableCategories={availableCategories}
+            />
+          );
+        })}
       </div>
-
-
-
-
-
-
-
-
     </div>
-  )
-}
+  );
+};
 
-export default RequestsAdmin
+export default RequestsAdmin;
