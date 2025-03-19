@@ -13,22 +13,27 @@ interface CustomNodeDatum extends TreeNodeDatum {
 const initialTreeData: any = {
   name: "Categories",
   status: "active",
+  attributes: { id: "root" },
   children: [
     {
       name: "Electronics",
       status: "active",
+      attributes: { id: "1" },
       children: [
         {
           name: "Laptops",
           status: "active",
+          attributes: { id: "2" },
           children: [
             {
               name: "Gaming Laptops",
               status: "active",
+              attributes: { id: "3" },
             },
             {
               name: "Office Laptops",
               status: "active",
+              attributes: { id: "4" },
             },
           ],
         },
@@ -81,12 +86,12 @@ const CategoryTree = () => {
                 height={40}
                 x={-60}
                 y={-20}
-                fill="#9DB2BF"
+                fill="#4CAF50"
                 rx={5}
                 onClick={() => setSelectedNode(rd3tProps.nodeDatum as any)}
               />
               <text
-                fill="#black"
+                fill="black"
                 textAnchor="middle"
                 dy="0.3em"
                 onClick={() => setSelectedNode(rd3tProps.nodeDatum as any)}
