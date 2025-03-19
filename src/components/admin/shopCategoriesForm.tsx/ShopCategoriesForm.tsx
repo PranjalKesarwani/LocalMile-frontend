@@ -65,64 +65,69 @@ const CategoryTree = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
 
   const handleAddCategory = async (action: string, payload: TCatetory) => {
-    if (action === "GET") {
-      const res = await axios.post(
-        `${BASE_URL}/admin/handle-category-actions`,
-        {
-          action: action,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
+    console.log("sdkjfalskjdflskj");
+    try {
+      if (action === "GET") {
+        const res = await axios.post(
+          `${BASE_URL}/admin/handle-category-actions`,
+          {
+            action: action,
           },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setTreeData(res.data);
+      } else if (action === "ADD") {
+        const { name, status, parentCategory, image = "" } = payload;
+        if (!selectedNode) return;
+        if (!name || !status) {
+          toast.error("Please fill all fields!");
+          return;
         }
-      );
-      setTreeData(res.data);
-    } else if (action === "ADD") {
-      const { name, status, parentCategory, image = "" } = payload;
-      if (!selectedNode) return;
-      if (!name || !status || !parentCategory) {
-        toast.error("Please fill all fields!");
-        return;
-      }
-      const res = await axios.post(
-        `${BASE_URL}/admin/handle-category-actions`,
-        {
-          action: action,
+        const res = await axios.post(
+          `${BASE_URL}/admin/handle-category-actions`,
+          {
+            action: action,
+            name: name,
+            status: status,
+            parentCategory: selectedNode.attributes?.id,
+            image: image,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (res.status === 201) {
+          toast.success("Category added successfully!");
+          handleAddCategory("GET", addCategory);
+          return;
+        }
+
+        const newCategory: any = {
           name: name,
           status: status,
-          parentCategory: selectedNode.attributes?.id,
-          image: image,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (res.status === 201) {
+          attributes: { id: Date.now().toString() },
+        };
+
+        const updateTree = (node: CustomNodeDatum): CustomNodeDatum => ({
+          ...node,
+          children:
+            node.attributes?.id === selectedNode.attributes?.id
+              ? [...(node.children || []), newCategory]
+              : node.children?.map(updateTree as any),
+        });
+
+        setTreeData(updateTree(treeData));
+        setNewCategoryName("");
         toast.success("Category added successfully!");
-        handleAddCategory("GET", addCategory);
-        return;
       }
-
-      const newCategory: any = {
-        name: name,
-        status: status,
-        attributes: { id: Date.now().toString() },
-      };
-
-      const updateTree = (node: CustomNodeDatum): CustomNodeDatum => ({
-        ...node,
-        children:
-          node.attributes?.id === selectedNode.attributes?.id
-            ? [...(node.children || []), newCategory]
-            : node.children?.map(updateTree as any),
-      });
-
-      setTreeData(updateTree(treeData));
-      setNewCategoryName("");
-      toast.success("Category added successfully!");
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -196,18 +201,19 @@ const CategoryTree = () => {
           }
           style={{ margin: "10px 0", padding: 8, width: "100%" }}
         />
-        <input
-          type="text"
-          placeholder="Status"
-          value={addCategory?.status || ""}
+        <select
+          value={addCategory?.status || "active"}
           onChange={(e) =>
             setAddCategory({
               ...addCategory,
-              status: e.target.value === "inactive" ? "inactive" : "active",
+              status: e.target.value as "active" | "inactive",
             })
           }
           style={{ margin: "10px 0", padding: 8, width: "100%" }}
-        />
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
         <button
           onClick={() => handleAddCategory("ADD", addCategory)}
           disabled={!selectedNode || !addCategory.name}
