@@ -102,6 +102,7 @@ const CategoryTree = () => {
       );
       if (res.status === 201) {
         toast.success("Category added successfully!");
+        handleAddCategory("GET", addCategory);
         return;
       }
 
@@ -180,7 +181,7 @@ const CategoryTree = () => {
         <input
           type="text"
           placeholder="Parent Category ID"
-          value={addCategory?.parentCategory || ""}
+          value={selectedNode?.attributes?.id}
           onChange={(e) =>
             setAddCategory({ ...addCategory, parentCategory: e.target.value })
           }
