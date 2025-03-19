@@ -1,6 +1,8 @@
-import { useState } from "react";
+import axios from "axios";
+import { useEffect, useState } from "react";
 import { Tree, TreeNodeDatum } from "react-d3-tree";
 import { toast } from "react-toastify";
+import { BASE_URL } from "../../../Url";
 
 // Extend the default TreeNodeDatum type
 interface CustomNodeDatum extends TreeNodeDatum {
@@ -8,6 +10,13 @@ interface CustomNodeDatum extends TreeNodeDatum {
   attributes?: {
     id: string;
   };
+}
+
+interface TCatetory {
+  name: string;
+  status: "active" | "inactive";
+  parentCategory: string | null;
+  image?: string;
 }
 
 const initialTreeData: any = {
@@ -47,14 +56,34 @@ const CategoryTree = () => {
   const [selectedNode, setSelectedNode] = useState<CustomNodeDatum | null>(
     null
   );
+  const [addCategory, setAddCategory] = useState<TCatetory>({
+    name: "",
+    status: "active", // default status
+    parentCategory: null,
+    image: "",
+  });
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async (action: string) => {
+    if (action === "GET") {
+      const res = await axios.post(
+        `${BASE_URL}/admin/handle-category-actions`,
+        {
+          action: action,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setTreeData(res.data);
+    }
     if (!selectedNode || !newCategoryName) return;
 
     const newCategory: any = {
-      name: newCategoryName,
-      status: "active",
+      name: addCategory.name,
+      status: addCategory.status,
       attributes: { id: Date.now().toString() },
     };
 
@@ -70,6 +99,13 @@ const CategoryTree = () => {
     setNewCategoryName("");
     toast.success("Category added successfully!");
   };
+
+  useEffect(() => {
+    const fetchTree = async () => {
+      await handleAddCategory("GET");
+    };
+    fetchTree();
+  }, []);
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
@@ -110,12 +146,44 @@ const CategoryTree = () => {
         <input
           type="text"
           placeholder="New category name"
-          value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
+          value={addCategory?.name}
+          onChange={(e) =>
+            setAddCategory({ ...addCategory, name: e.target.value })
+          }
+          style={{ margin: "10px 0", padding: 8, width: "100%" }}
+        />
+        <input
+          type="text"
+          placeholder="Parent Category ID"
+          value={addCategory?.parentCategory || ""}
+          onChange={(e) =>
+            setAddCategory({ ...addCategory, parentCategory: e.target.value })
+          }
+          style={{ margin: "10px 0", padding: 8, width: "100%" }}
+        />
+        <input
+          type="text"
+          placeholder="Image URL"
+          value={addCategory?.image || ""}
+          onChange={(e) =>
+            setAddCategory({ ...addCategory, image: e.target.value })
+          }
+          style={{ margin: "10px 0", padding: 8, width: "100%" }}
+        />
+        <input
+          type="text"
+          placeholder="Status"
+          value={addCategory?.status || ""}
+          onChange={(e) =>
+            setAddCategory({
+              ...addCategory,
+              status: e.target.value === "inactive" ? "inactive" : "active",
+            })
+          }
           style={{ margin: "10px 0", padding: 8, width: "100%" }}
         />
         <button
-          onClick={handleAddCategory}
+          onClick={() => handleAddCategory("ADD")}
           disabled={!selectedNode || !newCategoryName}
           style={{
             padding: "8px 16px",
