@@ -13,27 +13,22 @@ interface CustomNodeDatum extends TreeNodeDatum {
 const initialTreeData: any = {
   name: "Categories",
   status: "active",
-  attributes: { id: "root" },
   children: [
     {
       name: "Electronics",
       status: "active",
-      // attributes: { id: "1" },
       children: [
         {
           name: "Laptops",
           status: "active",
-          attributes: { id: "2" },
           children: [
             {
               name: "Gaming Laptops",
               status: "active",
-              attributes: { id: "3" },
             },
             {
               name: "Office Laptops",
               status: "active",
-              attributes: { id: "4" },
             },
           ],
         },
