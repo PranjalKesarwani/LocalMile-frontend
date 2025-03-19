@@ -64,7 +64,7 @@ const CategoryTree = () => {
   });
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  const handleAddCategory = async (action: string) => {
+  const handleAddCategory = async (action: string, payload: TCatetory) => {
     if (action === "GET") {
       const res = await axios.post(
         `${BASE_URL}/admin/handle-category-actions`,
@@ -78,31 +78,56 @@ const CategoryTree = () => {
         }
       );
       setTreeData(res.data);
+    } else if (action === "ADD") {
+      const { name, status, parentCategory, image = "" } = payload;
+      if (!selectedNode) return;
+      if (!name || !status || !parentCategory) {
+        toast.error("Please fill all fields!");
+        return;
+      }
+      const res = await axios.post(
+        `${BASE_URL}/admin/handle-category-actions`,
+        {
+          action: action,
+          name: name,
+          status: status,
+          parentCategory: selectedNode.attributes?.id,
+          image: image,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res.status === 201) {
+        toast.success("Category added successfully!");
+        return;
+      }
+
+      const newCategory: any = {
+        name: name,
+        status: status,
+        attributes: { id: Date.now().toString() },
+      };
+
+      const updateTree = (node: CustomNodeDatum): CustomNodeDatum => ({
+        ...node,
+        children:
+          node.attributes?.id === selectedNode.attributes?.id
+            ? [...(node.children || []), newCategory]
+            : node.children?.map(updateTree as any),
+      });
+
+      setTreeData(updateTree(treeData));
+      setNewCategoryName("");
+      toast.success("Category added successfully!");
     }
-    if (!selectedNode || !newCategoryName) return;
-
-    const newCategory: any = {
-      name: addCategory.name,
-      status: addCategory.status,
-      attributes: { id: Date.now().toString() },
-    };
-
-    const updateTree = (node: CustomNodeDatum): CustomNodeDatum => ({
-      ...node,
-      children:
-        node.attributes?.id === selectedNode.attributes?.id
-          ? [...(node.children || []), newCategory]
-          : node.children?.map(updateTree as any),
-    });
-
-    setTreeData(updateTree(treeData));
-    setNewCategoryName("");
-    toast.success("Category added successfully!");
   };
 
   useEffect(() => {
     const fetchTree = async () => {
-      await handleAddCategory("GET");
+      await handleAddCategory("GET", addCategory);
     };
     fetchTree();
   }, []);
@@ -183,8 +208,8 @@ const CategoryTree = () => {
           style={{ margin: "10px 0", padding: 8, width: "100%" }}
         />
         <button
-          onClick={() => handleAddCategory("ADD")}
-          disabled={!selectedNode || !newCategoryName}
+          onClick={() => handleAddCategory("ADD", addCategory)}
+          disabled={!selectedNode || !addCategory.name}
           style={{
             padding: "8px 16px",
             backgroundColor: "#2196F3",
