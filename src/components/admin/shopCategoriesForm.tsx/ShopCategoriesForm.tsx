@@ -18,7 +18,7 @@ const initialTreeData: any = {
     {
       name: "Electronics",
       status: "active",
-      attributes: { id: "1" },
+      // attributes: { id: "1" },
       children: [
         {
           name: "Laptops",
@@ -86,12 +86,12 @@ const CategoryTree = () => {
                 height={40}
                 x={-60}
                 y={-20}
-                fill="#4CAF50"
+                fill="#9DB2BF"
                 rx={5}
                 onClick={() => setSelectedNode(rd3tProps.nodeDatum as any)}
               />
               <text
-                fill="black"
+                fill="#black"
                 textAnchor="middle"
                 dy="0.3em"
                 onClick={() => setSelectedNode(rd3tProps.nodeDatum as any)}
