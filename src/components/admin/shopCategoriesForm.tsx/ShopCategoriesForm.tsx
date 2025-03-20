@@ -100,12 +100,30 @@ const CategoryTree = () => {
       }
 
       if (action === "DELETE") {
-        apiPayload.categoryId = "31223234";
+        if (!selectedNode) {
+          toast.error("Select a category to delete!");
+          return;
+        }
+        apiPayload.categoryId = selectedNode.attributes?.id;
       }
 
       if (action === "UPDATE") {
-        apiPayload.categoryId = "sdf2s";
-        apiPayload.updateData = { name: "pk" };
+        if (!selectedNode) {
+          toast.error("Select a category to update!");
+          return;
+        }
+
+        const { name, status, image } = payload;
+
+        if (!name || !status) {
+          toast.error("Please fill all fields!");
+          return;
+        }
+
+        Object.assign(apiPayload, {
+          categoryId: selectedNode.attributes?.id,
+          updateData: { name, status, image },
+        });
       }
 
       const res = await axios.post(
@@ -142,7 +160,7 @@ const CategoryTree = () => {
 
   return (
     <div
-      className="flex items-center flex-col showBorder overflow-y-auto"
+      className="flex items-center flex-col showBorder overflow-y-auto w-full"
       style={{ display: "flex", height: "100vh" }}
     >
       <div className="w-full showBorder" style={{ flex: 1 }}>
@@ -175,9 +193,16 @@ const CategoryTree = () => {
         />
       </div>
 
-      <div style={{ width: 300, padding: 20, borderLeft: "1px solid #ccc" }}>
+      <div
+        className="w-full"
+        style={{ width: 300, padding: 20, borderLeft: "1px solid #ccc" }}
+      >
         <h3>
-          {selectedNode ? `Add to: ${selectedNode.name}` : "Select a node"}
+          <h3>
+            {selectedNode
+              ? `Edit Category: ${selectedNode.name}`
+              : "Select a category"}
+          </h3>
         </h3>
         <input
           type="text"
@@ -219,7 +244,7 @@ const CategoryTree = () => {
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <button
+        {/* <button
           onClick={() => handleAddCategory("ADD", addCategory)}
           disabled={!selectedNode || !addCategory.name}
           style={{
@@ -232,7 +257,45 @@ const CategoryTree = () => {
           }}
         >
           Add Subcategory
-        </button>
+        </button> */}
+        <div className="flex items-center justify-center w-full">
+          <button
+            onClick={() => handleAddCategory("ADD", addCategory)}
+            style={{
+              margin: "10px",
+              padding: "8px",
+              backgroundColor: "#2196F3",
+              color: "white",
+              borderRadius: 4,
+            }}
+          >
+            Add Subcategory
+          </button>
+          <button
+            onClick={() => handleAddCategory("UPDATE", addCategory)}
+            style={{
+              margin: "10px",
+              padding: "8px",
+              backgroundColor: "#FF9800",
+              color: "white",
+              borderRadius: 4,
+            }}
+          >
+            Update Category
+          </button>
+          <button
+            onClick={() => handleAddCategory("DELETE", addCategory)}
+            style={{
+              margin: "10px",
+              padding: "8px",
+              backgroundColor: "#F44336",
+              color: "white",
+              borderRadius: 4,
+            }}
+          >
+            Delete Category
+          </button>
+        </div>
       </div>
     </div>
   );
