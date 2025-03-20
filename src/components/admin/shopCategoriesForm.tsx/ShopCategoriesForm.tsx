@@ -62,72 +62,74 @@ const CategoryTree = () => {
     parentCategory: null,
     image: "",
   });
-  const [newCategoryName, setNewCategoryName] = useState("");
 
   const handleAddCategory = async (action: string, payload: TCatetory) => {
-    console.log("sdkjfalskjdflskj");
     try {
+      const apiPayload: any = { action };
+      const headers = { "Content-Type": "application/json" };
+
       if (action === "GET") {
         const res = await axios.post(
           `${BASE_URL}/admin/handle-category-actions`,
-          {
-            action: action,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+          apiPayload,
+          { headers }
         );
         setTreeData(res.data);
-      } else if (action === "ADD") {
+        return;
+      }
+
+      if (!["ADD", "DELETE", "UPDATE"].includes(action)) {
+        toast.error("Invalid action!");
+        return;
+      }
+
+      if (action === "ADD") {
         const { name, status, parentCategory, image = "" } = payload;
-        if (!selectedNode) return;
-        if (!name || !status) {
+
+        if (!selectedNode || !name || !status) {
           toast.error("Please fill all fields!");
           return;
         }
-        const res = await axios.post(
-          `${BASE_URL}/admin/handle-category-actions`,
-          {
-            action: action,
-            name: name,
-            status: status,
-            parentCategory: selectedNode.attributes?.id,
-            image: image,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (res.status === 201) {
-          toast.success("Category added successfully!");
-          handleAddCategory("GET", addCategory);
-          return;
-        }
 
-        const newCategory: any = {
-          name: name,
-          status: status,
-          attributes: { id: Date.now().toString() },
-        };
-
-        const updateTree = (node: CustomNodeDatum): CustomNodeDatum => ({
-          ...node,
-          children:
-            node.attributes?.id === selectedNode.attributes?.id
-              ? [...(node.children || []), newCategory]
-              : node.children?.map(updateTree as any),
+        Object.assign(apiPayload, {
+          name,
+          status,
+          parentCategory: selectedNode.attributes?.id,
+          image,
         });
+      }
 
-        setTreeData(updateTree(treeData));
-        setNewCategoryName("");
+      if (action === "DELETE") {
+        apiPayload.categoryId = "31223234";
+      }
+
+      if (action === "UPDATE") {
+        apiPayload.categoryId = "sdf2s";
+        apiPayload.updateData = { name: "pk" };
+      }
+
+      const res = await axios.post(
+        `${BASE_URL}/admin/handle-category-actions`,
+        apiPayload,
+        { headers }
+      );
+
+      if (res.status === 201 && action === "ADD") {
         toast.success("Category added successfully!");
+        handleAddCategory("GET", payload);
+      }
+
+      if (res.status === 200 && action === "DELETE") {
+        toast.success("Category deleted successfully!");
+        handleAddCategory("GET", payload);
+      }
+
+      if (res.status === 200 && action === "UPDATE") {
+        toast.success("Category updated successfully!");
+        handleAddCategory("GET", payload);
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     }
   };
 
@@ -139,8 +141,11 @@ const CategoryTree = () => {
   }, []);
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      <div style={{ flex: 1, border: "1px solid #ccc" }}>
+    <div
+      className="flex items-center flex-col showBorder overflow-y-auto"
+      style={{ display: "flex", height: "100vh" }}
+    >
+      <div className="w-full showBorder" style={{ flex: 1 }}>
         <Tree
           data={treeData}
           orientation="vertical"

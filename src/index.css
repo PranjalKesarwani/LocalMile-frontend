@@ -11,7 +11,7 @@
     /* font-family: 'Inter Tight', sans-serif; */
 }
 
-body{
+body {
     font-size: 1.6rem;
 }
 
@@ -37,7 +37,7 @@ input {
 }
 
 .showBorder {
-    border: 1px solid black;
+    border: 1px solid red;
 }
 
 .line {
@@ -89,7 +89,6 @@ input {
 .y-scrollbar::-webkit-scrollbar-thumb {
     background-color: #4a5568;
     border-radius: 8px;
-    
+
 
 }
-
