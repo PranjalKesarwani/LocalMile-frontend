@@ -84,7 +84,7 @@ const CategoryTree = () => {
       }
 
       if (action === "ADD") {
-        const { name, status, parentCategory, image = "" } = payload;
+        const { name, status, image = "" } = payload;
 
         if (!selectedNode || !name || !status) {
           toast.error("Please fill all fields!");
