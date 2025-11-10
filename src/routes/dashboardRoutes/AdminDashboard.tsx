@@ -6,9 +6,12 @@ import RequestsAdmin from "../../components/admin/RequestsAdmin";
 import AllSellersAdmin from "../../components/admin/AllSellersAdmin";
 import ShopCategoriesForm from "../../components/admin/shopCategoriesForm.tsx/ShopCategoriesForm";
 import { BASE_COLORS } from "../../constant";
+import { useState } from "react";
 
 const AdminDashboard = () => {
   const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const menuItems = [
     {
@@ -124,67 +127,152 @@ const AdminDashboard = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div
-          className="w-64 h-full p-4 overflow-y-auto"
+          className={`h-full overflow-y-auto transition-all duration-300 ${
+            isCollapsed ? "w-20" : "w-64"
+          }`}
           style={{ backgroundColor: BASE_COLORS.white }}
         >
-          <div className="mb-6">
-            <h2
-              className="text-lg font-bold mb-1"
-              style={{ color: BASE_COLORS.darkText }}
-            >
-              Navigation
-            </h2>
-            <div
-              className="h-0.5 w-12 rounded-full"
-              style={{ backgroundColor: BASE_COLORS.primary }}
-            />
-          </div>
-
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    active ? "font-semibold" : "font-medium"
-                  }`}
+          <div className={`p-4 ${isCollapsed ? "px-2" : ""}`}>
+            <div className={`mb-6 ${isCollapsed ? "flex justify-center" : ""}`}>
+              {!isCollapsed && (
+                <h2
+                  className="text-lg font-bold mb-1"
+                  style={{ color: BASE_COLORS.darkText }}
+                >
+                  Navigation
+                </h2>
+              )}
+              <div className="flex items-center justify-between">
+                {!isCollapsed && (
+                  <div
+                    className="h-0.5 w-12 rounded-full"
+                    style={{ backgroundColor: BASE_COLORS.primary }}
+                  />
+                )}
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="p-2 rounded-lg hover:opacity-80 transition-all duration-200"
                   style={{
-                    backgroundColor: active
+                    backgroundColor: isCollapsed
                       ? `${BASE_COLORS.primary}15`
                       : "transparent",
-                    color: active ? BASE_COLORS.primary : BASE_COLORS.darkText,
+                    color: BASE_COLORS.primary,
                   }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.backgroundColor = `${BASE_COLORS.primary}08`;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
+                  title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
-                  <span
-                    style={{
-                      color: active ? BASE_COLORS.primary : BASE_COLORS.gray,
-                    }}
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                  {active && (
-                    <div
-                      className="ml-auto w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: BASE_COLORS.primary }}
-                    />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+                    {isCollapsed ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    )}
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <nav className="space-y-2">
+              {menuItems.map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center ${
+                      isCollapsed ? "justify-center px-2" : "gap-3 px-4"
+                    } py-3 rounded-lg transition-all duration-200 ${
+                      active ? "font-semibold" : "font-medium"
+                    }`}
+                    style={{
+                      backgroundColor: active
+                        ? `${BASE_COLORS.primary}15`
+                        : "transparent",
+                      color: active
+                        ? BASE_COLORS.primary
+                        : BASE_COLORS.darkText,
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.backgroundColor = `${BASE_COLORS.primary}08`;
+                      }
+                      if (isCollapsed) {
+                        setHoveredItem(item.path);
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                      setHoveredItem(null);
+                    }}
+                    title={isCollapsed ? item.label : ""}
+                  >
+                    <span
+                      style={{
+                        color: active
+                          ? BASE_COLORS.primary
+                          : BASE_COLORS.gray,
+                        minWidth: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="flex-1">{item.label}</span>
+                        {active && (
+                          <div
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: BASE_COLORS.primary }}
+                          />
+                        )}
+                      </>
+                    )}
+                    {/* Tooltip when collapsed */}
+                    {isCollapsed && hoveredItem === item.path && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "100%",
+                          marginLeft: "8px",
+                          padding: "6px 12px",
+                          backgroundColor: BASE_COLORS.white,
+                          color: BASE_COLORS.darkText,
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          whiteSpace: "nowrap",
+                          zIndex: 1000,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        {item.label}
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
         {/* Main Content */}
