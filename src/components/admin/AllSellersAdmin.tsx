@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BASE_COLORS } from "../../constant";
+import { toast } from "react-toastify";
+import { api } from "../../configs/apiClient";
 
 interface Seller {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
+  _id: string;
+  adminApproval: boolean;
+  sellerName: string;
   shopName: string;
-  status: "active" | "inactive" | "pending";
-  joinDate: string;
+  basicAddress: string;
+  mobile: string;
+  profilePic: string;
+  createdAt: string;
+  email: string;
+  upiId: string;
+  // optional, backend may provide a status or isActive/blocked flags
+  status?: "active" | "inactive" | "pending";
+  // legacy/alternate fields we may map from
+  phone?: string;
+  name?: string;
+  joinDate?: string;
 }
 
 const AllSellersAdmin = () => {
@@ -17,23 +28,99 @@ const AllSellersAdmin = () => {
     "all" | "active" | "inactive" | "pending"
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // map backend seller object to our Seller interface safely
+  const normalizeSeller = (r: any): Seller => {
+    const mobile = r.mobile || r.phone || "";
+    const sellerName = r.sellerName || r.name || "";
+    const basicAddress = r.basicAddress || r.shopAddress || "";
+    const createdAt = r.createdAt || r.joinDate || new Date().toISOString();
+    // derive status if backend doesn't provide it explicitly
+    const status =
+      r.status ||
+      (typeof r.adminApproval === "boolean"
+        ? r.adminApproval
+          ? "active"
+          : "pending"
+        : r.isActive === false
+        ? "inactive"
+        : undefined);
+
+    return {
+      _id: r._id || r.id,
+      adminApproval: Boolean(r.adminApproval),
+      sellerName,
+      shopName: r.shopName || r.shop || "",
+      basicAddress,
+      mobile,
+      profilePic: r.profilePic || r.pic || "",
+      createdAt,
+      email: r.email || "",
+      upiId: r.upiId || "",
+      status,
+      // keep legacy fields for safety
+      phone: r.phone,
+      name: r.name,
+      joinDate: r.joinDate,
+    };
+  };
+
+  const getAllSellers = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/admin/get-all-sellers");
+      // expected shape: { success: true, sellers: [...] }
+      if (res.status === 200 && Array.isArray(res.data?.sellers)) {
+        const normalized = res.data.sellers.map((s: any) => normalizeSeller(s));
+        setSellers(normalized);
+      } else {
+        toast.error("Unexpected response from server");
+      }
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getAllSellers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // safe access helpers for filtering/search
+  const getDisplayName = (seller: Seller) =>
+    seller.sellerName || seller.name || "";
+  const getDisplayEmail = (seller: Seller) => seller.email || "";
+  const getDisplayShopName = (seller: Seller) => seller.shopName || "";
 
   const filteredSellers = sellers.filter((seller) => {
     const matchesFilter = filter === "all" || seller.status === filter;
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return matchesFilter;
+
     const matchesSearch =
-      seller.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      seller.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      seller.shopName.toLowerCase().includes(searchQuery.toLowerCase());
+      getDisplayName(seller).toLowerCase().includes(q) ||
+      getDisplayEmail(seller).toLowerCase().includes(q) ||
+      getDisplayShopName(seller).toLowerCase().includes(q) ||
+      (seller.mobile || "").includes(q) ||
+      (seller.upiId || "").toLowerCase().includes(q);
+
     return matchesFilter && matchesSearch;
   });
 
-  const statusColors = {
+  const statusColors: Record<"active" | "inactive" | "pending", string> = {
     active: BASE_COLORS.success,
     inactive: BASE_COLORS.gray,
     pending: BASE_COLORS.warning,
   };
 
-  const statusLabels = {
+  const statusLabels: Record<"active" | "inactive" | "pending", string> = {
     active: "Active",
     inactive: "Inactive",
     pending: "Pending",
@@ -58,7 +145,7 @@ const AllSellersAdmin = () => {
         <div className="flex-1">
           <input
             type="text"
-            placeholder="Search by name, email, or shop name..."
+            placeholder="Search by name, email, phone, shop name or UPI..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 rounded-lg border-2 focus:outline-none focus:ring-2"
@@ -68,10 +155,12 @@ const AllSellersAdmin = () => {
               color: BASE_COLORS.darkText,
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = BASE_COLORS.primary;
+              (e.target as HTMLInputElement).style.borderColor =
+                BASE_COLORS.primary;
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = BASE_COLORS.lightGray;
+              (e.target as HTMLInputElement).style.borderColor =
+                BASE_COLORS.lightGray;
             }}
           />
         </div>
@@ -170,7 +259,14 @@ const AllSellersAdmin = () => {
         className="rounded-xl shadow-lg overflow-hidden"
         style={{ backgroundColor: BASE_COLORS.white }}
       >
-        {filteredSellers.length === 0 ? (
+        {loading ? (
+          <div
+            className="flex items-center justify-center py-12"
+            style={{ color: BASE_COLORS.gray }}
+          >
+            Loading...
+          </div>
+        ) : filteredSellers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
@@ -248,7 +344,7 @@ const AllSellersAdmin = () => {
               <tbody>
                 {filteredSellers.map((seller, index) => (
                   <tr
-                    key={seller.id}
+                    key={seller._id}
                     className="border-t transition-colors hover:bg-opacity-50"
                     style={{
                       borderColor: BASE_COLORS.lightGray,
@@ -264,20 +360,20 @@ const AllSellersAdmin = () => {
                           className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white"
                           style={{ backgroundColor: BASE_COLORS.primary }}
                         >
-                          {seller.name[0].toUpperCase()}
+                          {(getDisplayName(seller)[0] || "U").toUpperCase()}
                         </div>
                         <div>
                           <p
                             className="font-medium"
                             style={{ color: BASE_COLORS.darkText }}
                           >
-                            {seller.name}
+                            {getDisplayName(seller)}
                           </p>
                           <p
                             className="text-sm"
                             style={{ color: BASE_COLORS.gray }}
                           >
-                            {seller.email}
+                            {getDisplayEmail(seller)}
                           </p>
                         </div>
                       </div>
@@ -287,28 +383,32 @@ const AllSellersAdmin = () => {
                         className="font-medium"
                         style={{ color: BASE_COLORS.darkText }}
                       >
-                        {seller.shopName}
+                        {getDisplayShopName(seller)}
                       </p>
                     </td>
                     <td className="px-6 py-4">
                       <p style={{ color: BASE_COLORS.darkText }}>
-                        {seller.phone}
+                        {seller.mobile || seller.phone || "N/A"}
                       </p>
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className="px-3 py-1 rounded-full text-xs font-medium"
                         style={{
-                          backgroundColor: `${statusColors[seller.status]}20`,
-                          color: statusColors[seller.status],
+                          backgroundColor: `${
+                            statusColors[seller.status || "pending"]
+                          }20`,
+                          color: statusColors[seller.status || "pending"],
                         }}
                       >
-                        {statusLabels[seller.status]}
+                        {statusLabels[seller.status || "pending"]}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <p style={{ color: BASE_COLORS.gray }}>
-                        {new Date(seller.joinDate).toLocaleDateString()}
+                        {new Date(
+                          seller.createdAt || seller.joinDate || Date.now()
+                        ).toLocaleDateString()}
                       </p>
                     </td>
                     <td className="px-6 py-4">
@@ -317,6 +417,13 @@ const AllSellersAdmin = () => {
                         style={{
                           backgroundColor: BASE_COLORS.primary,
                           color: BASE_COLORS.white,
+                        }}
+                        // hook this up to your detail view / navigation
+                        onClick={() => {
+                          // example: navigate to seller details, replace with your router
+                          toast.info(
+                            "Open seller details - wire up navigation"
+                          );
                         }}
                       >
                         View Details
