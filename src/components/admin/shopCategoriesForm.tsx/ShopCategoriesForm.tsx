@@ -1,16 +1,18 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { Tree, TreeNodeDatum } from "react-d3-tree";
+import React, { useEffect, useState } from "react";
+import { Tree, TreeNode } from "react-organizational-chart";
 import { toast } from "react-toastify";
 import { BASE_URL } from "../../../Url";
 import { BASE_COLORS } from "../../../constant";
 
-// Extend the default TreeNodeDatum type
-interface CustomNodeDatum extends TreeNodeDatum {
+// Custom node data structure
+interface CustomNodeDatum {
+  name: string;
   status: "active" | "inactive";
   attributes?: {
     id: string;
   };
+  children?: CustomNodeDatum[];
 }
 
 interface TCatetory {
@@ -20,7 +22,7 @@ interface TCatetory {
   image?: string;
 }
 
-const initialTreeData: any = {
+const initialTreeData: CustomNodeDatum = {
   name: "Categories",
   status: "active",
   attributes: { id: "root" },
@@ -57,12 +59,89 @@ const CategoryTree = () => {
   const [selectedNode, setSelectedNode] = useState<CustomNodeDatum | null>(
     null
   );
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [addCategory, setAddCategory] = useState<TCatetory>({
     name: "",
     status: "active", // default status
     parentCategory: null,
     image: "",
   });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Don't start dragging if clicking on a button, node, or interactive element
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === "BUTTON" ||
+      target.closest("button") ||
+      target.closest('[data-tree-node="true"]')
+    ) {
+      return;
+    }
+    // Only start dragging on left mouse button
+    if (e.button === 0) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Add global mouse event listeners for smooth dragging
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleGlobalMouseMove);
+      document.addEventListener("mouseup", handleGlobalMouseUp);
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleGlobalMouseMove);
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDragging, dragStart]);
+
+  const toggleNodeExpansion = (nodeId: string) => {
+    setExpandedNodes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+  };
 
   const handleAddCategory = async (action: string, payload: TCatetory) => {
     try {
@@ -159,8 +238,136 @@ const CategoryTree = () => {
     fetchTree();
   }, []);
 
+  // Recursive function to render tree nodes
+  const renderTreeNode = (node: CustomNodeDatum): JSX.Element => {
+    const isSelected = selectedNode?.attributes?.id === node.attributes?.id;
+    const isActive = node.status === "active";
+    const nodeId = node.attributes?.id || node.name;
+    const hasChildren = node.children && node.children.length > 0;
+    const isExpanded = expandedNodes.has(nodeId);
+
+    const nodeLabel = (
+      <div
+        data-tree-node="true"
+        style={{
+          display: "inline-block",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          backgroundColor: isSelected
+            ? BASE_COLORS.primary
+            : isActive
+            ? BASE_COLORS.success
+            : BASE_COLORS.gray,
+          color: BASE_COLORS.white,
+          cursor: "pointer",
+          textAlign: "center",
+          fontWeight: "600",
+          fontSize: "14px",
+          border: isSelected ? `3px solid ${BASE_COLORS.primary}` : "none",
+          boxShadow: isSelected
+            ? `0 0 0 3px ${BASE_COLORS.primary}20`
+            : "0 2px 4px rgba(0,0,0,0.1)",
+          transition: "all 0.2s ease",
+          whiteSpace: "nowrap",
+        }}
+        onMouseEnter={(e) => {
+          if (!isSelected) {
+            e.currentTarget.style.opacity = "0.9";
+            e.currentTarget.style.transform = "scale(1.05)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isSelected) {
+            e.currentTarget.style.opacity = "1";
+            e.currentTarget.style.transform = "scale(1)";
+          }
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            justifyContent: "center",
+          }}
+        >
+          {hasChildren && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNodeExpansion(nodeId);
+              }}
+              style={{
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
+                userSelect: "none",
+                minWidth: "28px",
+                minHeight: "28px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: BASE_COLORS.white,
+                color: BASE_COLORS.darkText,
+                border: `2px solid ${BASE_COLORS.lightGray}`,
+                borderRadius: "6px",
+                padding: "4px 8px",
+                transition: "all 0.2s ease",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  BASE_COLORS.lightBackground;
+                e.currentTarget.style.borderColor = BASE_COLORS.primary;
+                e.currentTarget.style.transform = "scale(1.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = BASE_COLORS.white;
+                e.currentTarget.style.borderColor = BASE_COLORS.lightGray;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              {isExpanded ? "−" : "+"}
+            </button>
+          )}
+          <span
+            onClick={() => {
+              setSelectedNode(node);
+              setAddCategory({
+                name: node.name,
+                status: node.status,
+                parentCategory: null,
+                image: "",
+              });
+            }}
+          >
+            {node.name}
+          </span>
+        </div>
+      </div>
+    );
+
+    if (!hasChildren) {
+      return <TreeNode label={nodeLabel} />;
+    }
+
+    return (
+      <TreeNode label={nodeLabel}>
+        {isExpanded &&
+          node.children!.map((child) => (
+            <React.Fragment key={child.attributes?.id || child.name}>
+              {renderTreeNode(child)}
+            </React.Fragment>
+          ))}
+      </TreeNode>
+    );
+  };
+
   return (
-    <div className="w-full h-full flex flex-col" style={{ backgroundColor: BASE_COLORS.background }}>
+    <div
+      className="w-full h-full flex flex-col"
+      style={{ backgroundColor: BASE_COLORS.background }}
+    >
       {/* Header */}
       <div className="mb-6">
         <h1
@@ -180,7 +387,10 @@ const CategoryTree = () => {
           className="flex-1 rounded-xl shadow-lg overflow-hidden"
           style={{ backgroundColor: BASE_COLORS.white }}
         >
-          <div className="p-4 border-b" style={{ borderColor: BASE_COLORS.lightGray }}>
+          <div
+            className="p-4 border-b"
+            style={{ borderColor: BASE_COLORS.lightGray }}
+          >
             <h2
               className="text-xl font-semibold"
               style={{ color: BASE_COLORS.darkText }}
@@ -188,65 +398,163 @@ const CategoryTree = () => {
               Category Tree
             </h2>
             <p className="text-sm mt-1" style={{ color: BASE_COLORS.gray }}>
-              Click on a category node to select it
+              Click on a category node to select it, click +/- to
+              expand/collapse, drag to pan
             </p>
           </div>
-          <div className="w-full h-full overflow-auto" style={{ minHeight: "500px" }}>
-            <Tree
-              data={treeData}
-              orientation="vertical"
-              pathFunc="step"
-              translate={{ x: 200, y: 100 }}
-              renderCustomNodeElement={(rd3tProps) => {
-                const nodeData = rd3tProps.nodeDatum as CustomNodeDatum;
-                const isSelected = selectedNode?.attributes?.id === nodeData.attributes?.id;
-                const isActive = nodeData.status === "active";
-                
-                return (
-                  <g>
-                    <rect
-                      width={140}
-                      height={50}
-                      x={-70}
-                      y={-25}
-                      fill={isSelected ? BASE_COLORS.primary : (isActive ? BASE_COLORS.success : BASE_COLORS.gray)}
-                      rx={8}
-                      stroke={isSelected ? BASE_COLORS.primary : "transparent"}
-                      strokeWidth={isSelected ? 3 : 0}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => {
-                        setSelectedNode(nodeData);
-                        setAddCategory({
-                          name: nodeData.name,
-                          status: nodeData.status,
-                          parentCategory: null,
-                          image: "",
-                        });
-                      }}
-                    />
-                    <text
-                      fill={BASE_COLORS.white}
-                      textAnchor="middle"
-                      dy="0.3em"
-                      fontSize="14"
-                      fontWeight="600"
-                      style={{ cursor: "pointer", userSelect: "none" }}
-                      onClick={() => {
-                        setSelectedNode(nodeData);
-                        setAddCategory({
-                          name: nodeData.name,
-                          status: nodeData.status,
-                          parentCategory: null,
-                          image: "",
-                        });
+          <div
+            className="w-full h-full overflow-hidden relative"
+            style={{
+              minHeight: "500px",
+              cursor: isDragging ? "grabbing" : "grab",
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <div
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px)`,
+                transition: isDragging ? "none" : "transform 0.1s ease-out",
+                padding: "20px",
+                position: "absolute",
+                top: 0,
+                left: 0,
+              }}
+            >
+              <Tree
+                lineWidth="2px"
+                lineColor={BASE_COLORS.lightGray}
+                lineBorderRadius="10px"
+                label={
+                  <div
+                    data-tree-node="true"
+                    style={{
+                      display: "inline-block",
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      backgroundColor:
+                        selectedNode?.attributes?.id === treeData.attributes?.id
+                          ? BASE_COLORS.primary
+                          : treeData.status === "active"
+                          ? BASE_COLORS.success
+                          : BASE_COLORS.gray,
+                      color: BASE_COLORS.white,
+                      cursor: "pointer",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      border:
+                        selectedNode?.attributes?.id === treeData.attributes?.id
+                          ? `3px solid ${BASE_COLORS.primary}`
+                          : "none",
+                      boxShadow:
+                        selectedNode?.attributes?.id === treeData.attributes?.id
+                          ? `0 0 0 3px ${BASE_COLORS.primary}20`
+                          : "0 2px 4px rgba(0,0,0,0.1)",
+                      transition: "all 0.2s ease",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (
+                        selectedNode?.attributes?.id !== treeData.attributes?.id
+                      ) {
+                        e.currentTarget.style.opacity = "0.9";
+                        e.currentTarget.style.transform = "scale(1.05)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (
+                        selectedNode?.attributes?.id !== treeData.attributes?.id
+                      ) {
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.transform = "scale(1)";
+                      }
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        justifyContent: "center",
                       }}
                     >
-                      {rd3tProps.nodeDatum.name}
-                    </text>
-                  </g>
-                );
-              }}
-            />
+                      {treeData.children && treeData.children.length > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rootId =
+                              treeData.attributes?.id || treeData.name;
+                            toggleNodeExpansion(rootId);
+                          }}
+                          style={{
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                            userSelect: "none",
+                            minWidth: "28px",
+                            minHeight: "28px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: BASE_COLORS.white,
+                            color: BASE_COLORS.darkText,
+                            border: `2px solid ${BASE_COLORS.lightGray}`,
+                            borderRadius: "6px",
+                            padding: "4px 8px",
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              BASE_COLORS.lightBackground;
+                            e.currentTarget.style.borderColor =
+                              BASE_COLORS.primary;
+                            e.currentTarget.style.transform = "scale(1.1)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              BASE_COLORS.white;
+                            e.currentTarget.style.borderColor =
+                              BASE_COLORS.lightGray;
+                            e.currentTarget.style.transform = "scale(1)";
+                          }}
+                        >
+                          {expandedNodes.has(
+                            treeData.attributes?.id || treeData.name
+                          )
+                            ? "−"
+                            : "+"}
+                        </button>
+                      )}
+                      <span
+                        onClick={() => {
+                          setSelectedNode(treeData);
+                          setAddCategory({
+                            name: treeData.name,
+                            status: treeData.status,
+                            parentCategory: null,
+                            image: "",
+                          });
+                        }}
+                      >
+                        {treeData.name}
+                      </span>
+                    </div>
+                  </div>
+                }
+              >
+                {treeData.children &&
+                  expandedNodes.has(treeData.attributes?.id || treeData.name) &&
+                  treeData.children.map((child) => (
+                    <React.Fragment key={child.attributes?.id || child.name}>
+                      {renderTreeNode(child)}
+                    </React.Fragment>
+                  ))}
+              </Tree>
+            </div>
           </div>
         </div>
 
@@ -462,7 +770,10 @@ const CategoryTree = () => {
               >
                 No category selected
               </h3>
-              <p className="text-sm text-center" style={{ color: BASE_COLORS.gray }}>
+              <p
+                className="text-sm text-center"
+                style={{ color: BASE_COLORS.gray }}
+              >
                 Click on a category node in the tree to select and edit it
               </p>
             </div>
