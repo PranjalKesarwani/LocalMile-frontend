@@ -3,160 +3,109 @@ import { BASE_COLORS } from "../../constant";
 import { toast } from "react-toastify";
 import { api } from "../../configs/apiClient";
 
+/**
+ * Full Requests type including all fields seen in your examples.
+ * Keep optional fields for backward compatibility.
+ */
 export type Requests = {
-  _id: string;
+  _id: string; // aka sellerId
   adminApproval: boolean;
   sellerName: string;
   shopName: string;
-  basicAddress: string;
+  basicAddress: string; // or shopAddress
+  shopAddress?: string;
+  landmark?: string;
+  pinCode?: string;
   mobile: string;
+  phone?: string;
   profilePic: string;
+  pic?: string;
   createdAt: string;
+  updatedAt?: string;
   email: string;
   upiId: string;
-  // backend might return "chosenCategories" or "categories" — keep both optional
   chosenCategories?: string[];
   categories?: string[];
+  activeSessions?: any[]; // keep generic
+  role?: string;
 };
 
-const fallbackStaticRequests: Requests[] = [
-  {
-    _id: "1",
-    sellerName: "Rajesh Kumar",
-    shopName: "Rajesh Electronics",
-    basicAddress: "123 Main Street, Sector 5",
-    mobile: "9876543210",
-    email: "rajesh.kumar@example.com",
-    profilePic: "",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    adminApproval: false,
-    upiId: "",
-    chosenCategories: ["Electronics", "Appliances"],
-  },
-  {
-    _id: "2",
-    sellerName: "Priya Sharma",
-    shopName: "Priya Fashion Hub",
-    basicAddress: "456 Market Road, Sector 8",
-    mobile: "9876543211",
-    email: "priya.sharma@example.com",
-    profilePic: "",
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    adminApproval: true,
-    upiId: "",
-    chosenCategories: ["Clothing", "Accessories"],
-  },
-];
-
 const RequestsAdmin = () => {
-  const [requests, setRequests] = useState<Requests[]>(fallbackStaticRequests);
+  const [requests, setRequests] = useState<Requests[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  // track loading states per-request to avoid duplicate clicks
+  const [requestLoading, setRequestLoading] = useState<Record<string, boolean>>(
+    {}
+  );
 
-  // Fetch pending requests from backend
+  // --- Utility: set per-request loading flag
+  const setReqLoading = (id: string, val: boolean) =>
+    setRequestLoading((prev) => ({ ...prev, [id]: val }));
+
+  // --- Normalize backend object to our Requests type
+  const normalizeRequest = (r: any): Requests => {
+    const _id = r._id || r.id || r.sellerId || "";
+    const profilePic = r.profilePic || r.pic || "";
+    const mobile = r.mobile || r.phone || "";
+    const basicAddress = r.basicAddress || r.shopAddress || r.shopAddress || "";
+    const chosenCategories = r.chosenCategories || r.categories || [];
+    const createdAt = r.createdAt || r.created_at || new Date().toISOString();
+
+    return {
+      _id,
+      adminApproval: Boolean(r.adminApproval),
+      sellerName: r.sellerName || r.name || "",
+      shopName: r.shopName || r.shop || "",
+      basicAddress,
+      shopAddress: r.shopAddress,
+      landmark: r.landmark,
+      pinCode: r.pinCode,
+      mobile,
+      phone: r.phone,
+      profilePic,
+      pic: r.pic,
+      createdAt,
+      updatedAt: r.updatedAt || r.updated_at,
+      email: r.email || "",
+      upiId: r.upiId || r.upi_id || "",
+      chosenCategories,
+      categories: r.categories,
+      activeSessions: r.activeSessions || r.active_sessions || [],
+      role: r.role || "seller",
+    };
+  };
+
+  // --- Fetch seller requests
   const getPendingRequests = async () => {
     setLoading(true);
     try {
       const res = await api.get("/admin/get-seller-requests");
-      // expected response: { success: true, sellerRequests }
-      if (res.status === 200 && res.data?.sellerRequests) {
-        // map/normalize server objects to our Requests type if needed
-        const normalized: Requests[] = res.data.sellerRequests.map(
-          (r: any) => ({
-            _id: r._id || r.id,
-            adminApproval: Boolean(r.adminApproval),
-            sellerName: r.sellerName || r.name || "",
-            shopName: r.shopName || r.shop || "",
-            basicAddress: r.basicAddress || r.shopAddress || "",
-            mobile: r.mobile || r.phone || "",
-            profilePic: r.profilePic || r.pic || "",
-            createdAt: r.createdAt || new Date().toISOString(),
-            email: r.email || "",
-            upiId: r.upiId || "",
-            chosenCategories: r.chosenCategories || r.categories || [],
-          })
+      // expected: { success: true, sellerRequests: [...] }
+      if (res.status === 200 && Array.isArray(res.data?.sellerRequests)) {
+        const normalized = res.data.sellerRequests.map((r: any) =>
+          normalizeRequest(r)
+        );
+        setRequests(normalized);
+      } else if (res.status === 200 && Array.isArray(res.data?.requests)) {
+        // fallback key
+        const normalized = res.data.requests.map((r: any) =>
+          normalizeRequest(r)
         );
         setRequests(normalized);
       } else {
-        toast.error("Unexpected response from server");
+        toast.error(
+          "Unexpected response from server when fetching seller requests"
+        );
       }
     } catch (error: any) {
       const errMsg =
         error?.response?.data?.message ||
-        error.message ||
+        error?.message ||
         "Something went wrong";
       toast.error(errMsg);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Optimistic UI update + call backend to change approval
-  const changeApproval = async (requestId: string, newStatus: boolean) => {
-    // Optimistically update UI
-    setRequests((prev) =>
-      prev.map((r) =>
-        r._id === requestId ? { ...r, adminApproval: newStatus } : r
-      )
-    );
-
-    try {
-      // Replace this endpoint with your actual backend route if different.
-      // This sends sellerId and desired adminApproval flag.
-      const res = await api.post("/admin/update-seller-approval", {
-        sellerId: requestId,
-        adminApproval: newStatus,
-      });
-
-      if (res.status === 200 && res.data?.success) {
-        toast.success(
-          newStatus ? "Seller approved successfully" : "Seller approval revoked"
-        );
-        // backend returned updated seller? if yes, reconcile:
-        if (res.data.updatedSeller) {
-          const updated = res.data.updatedSeller;
-          setRequests((prev) =>
-            prev.map((r) =>
-              r._id === requestId
-                ? {
-                    ...r,
-                    adminApproval: Boolean(updated.adminApproval),
-                    sellerName: updated.sellerName ?? r.sellerName,
-                    shopName: updated.shopName ?? r.shopName,
-                    basicAddress: updated.basicAddress ?? r.basicAddress,
-                    mobile: updated.mobile ?? r.mobile,
-                    profilePic: updated.profilePic ?? r.profilePic,
-                    email: updated.email ?? r.email,
-                    upiId: updated.upiId ?? r.upiId,
-                    chosenCategories:
-                      updated.chosenCategories ??
-                      updated.categories ??
-                      r.chosenCategories,
-                    createdAt: updated.createdAt ?? r.createdAt,
-                  }
-                : r
-            )
-          );
-        }
-      } else {
-        // revert optimistic change if server didn't succeed
-        setRequests((prev) =>
-          prev.map((r) =>
-            r._id === requestId ? { ...r, adminApproval: !newStatus } : r
-          )
-        );
-        toast.error(res.data?.message || "Failed to update approval");
-      }
-    } catch (error: any) {
-      // revert optimistic change
-      setRequests((prev) =>
-        prev.map((r) =>
-          r._id === requestId ? { ...r, adminApproval: !newStatus } : r
-        )
-      );
-      const errMsg =
-        error?.response?.data?.message || error.message || "Network error";
-      toast.error(errMsg);
     }
   };
 
@@ -165,11 +114,86 @@ const RequestsAdmin = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filter requests based on search query
+  // --- Server call for approval API
+  // The server expects: { approvalStatus, approvedEntity, approvedEntityId }
+  const updateApprovalOnServer = async (
+    approvedEntityId: string,
+    approvalStatus: "approved" | "rejected" | "pending"
+  ) => {
+    return api.post("/admin/approve", {
+      approvalStatus,
+      approvedEntity: "seller",
+      approvedEntityId,
+    });
+  };
+
+  /**
+   * Handle approve/reject/revoke actions with optimistic UI + rollback.
+   * action: "approved" | "rejected" | "pending"
+   */
+  const handleApprovalAction = async (
+    requestId: string,
+    action: "approved" | "rejected" | "pending"
+  ) => {
+    if (requestLoading[requestId]) return;
+
+    // compute optimistic boolean adminApproval
+    const optimisticAdminApproval = action === "approved";
+
+    // Save previous state for rollback
+    const prevRequests = requests;
+
+    // Optimistic UI update
+    setRequests((prev) =>
+      prev.map((r) =>
+        r._id === requestId
+          ? { ...r, adminApproval: optimisticAdminApproval }
+          : r
+      )
+    );
+
+    setReqLoading(requestId, true);
+
+    try {
+      const res = await updateApprovalOnServer(requestId, action);
+
+      if (res.status === 200 && res.data?.success) {
+        // show toast
+        if (action === "approved")
+          toast.success("Seller approved successfully");
+        else if (action === "rejected") toast.info("Seller rejected");
+        else toast.info("Seller set to pending");
+
+        // If server returns updated entity, reconcile fields
+        const updated =
+          res.data.updatedEntity || res.data.updatedSeller || null;
+        if (updated) {
+          const normalized = normalizeRequest(updated);
+          setRequests((prev) =>
+            prev.map((r) => (r._id === requestId ? normalized : r))
+          );
+        }
+        // otherwise keep optimistic change (already applied)
+      } else {
+        // rollback
+        setRequests(prevRequests);
+        toast.error(res.data?.message || "Failed to update approval");
+      }
+    } catch (error: any) {
+      // rollback
+      setRequests(prevRequests);
+      const errMsg =
+        error?.response?.data?.message || error?.message || "Network error";
+      toast.error(errMsg);
+    } finally {
+      setReqLoading(requestId, false);
+    }
+  };
+
+  // --- Filter logic
   const filteredRequests = requests.filter((request) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
-
     const categories = (
       request.chosenCategories ||
       request.categories ||
@@ -180,30 +204,28 @@ const RequestsAdmin = () => {
       request.shopName.toLowerCase().includes(q) ||
       (request.email || "").toLowerCase().includes(q) ||
       (request.mobile || "").includes(q) ||
-      categories.toLowerCase().includes(q)
+      (request.phone || "").includes(q) ||
+      categories.toLowerCase().includes(q) ||
+      (request.basicAddress || "").toLowerCase().includes(q) ||
+      (request.shopAddress || "").toLowerCase().includes(q)
     );
   });
 
-  // Format date to readable string
+  // --- Date formatter
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInDays === 0) {
-      return "Today";
-    } else if (diffInDays === 1) {
-      return "Yesterday";
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else {
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    }
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "Yesterday";
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -240,6 +262,7 @@ const RequestsAdmin = () => {
             {requests.length}
           </p>
         </div>
+
         <div
           className="rounded-lg p-4 shadow-md"
           style={{ backgroundColor: BASE_COLORS.white }}
@@ -257,6 +280,7 @@ const RequestsAdmin = () => {
             {requests.filter((r) => !r.adminApproval).length}
           </p>
         </div>
+
         <div
           className="rounded-lg p-4 shadow-md"
           style={{ backgroundColor: BASE_COLORS.white }}
@@ -274,6 +298,7 @@ const RequestsAdmin = () => {
             {requests.filter((r) => r.adminApproval).length}
           </p>
         </div>
+
         <div
           className="rounded-lg p-4 shadow-md"
           style={{ backgroundColor: BASE_COLORS.white }}
@@ -295,7 +320,6 @@ const RequestsAdmin = () => {
 
       {/* Filters and Search */}
       <div className="mb-6 space-y-4">
-        {/* Search Bar */}
         <div>
           <input
             type="text"
@@ -365,6 +389,8 @@ const RequestsAdmin = () => {
           filteredRequests.map((request) => {
             const categories =
               request.chosenCategories || request.categories || [];
+            const isReqLoading = Boolean(requestLoading[request._id]);
+
             return (
               <div
                 key={request._id}
@@ -522,7 +548,17 @@ const RequestsAdmin = () => {
                             className="text-base font-semibold"
                             style={{ color: BASE_COLORS.darkText }}
                           >
-                            {request.basicAddress || "N/A"}
+                            {request.basicAddress ||
+                              request.shopAddress ||
+                              "N/A"}
+                          </p>
+                          <p
+                            className="text-sm"
+                            style={{ color: BASE_COLORS.gray }}
+                          >
+                            {request.landmark
+                              ? `${request.landmark} - ${request.pinCode ?? ""}`
+                              : request.pinCode ?? ""}
                           </p>
                         </div>
                       </div>
@@ -560,7 +596,7 @@ const RequestsAdmin = () => {
                             className="text-base font-semibold"
                             style={{ color: BASE_COLORS.darkText }}
                           >
-                            {request.mobile || "N/A"}
+                            {request.mobile || request.phone || "N/A"}
                           </p>
                         </div>
                       </div>
@@ -703,17 +739,24 @@ const RequestsAdmin = () => {
                     {!request.adminApproval ? (
                       <>
                         <button
-                          onClick={() => changeApproval(request._id, true)}
+                          onClick={() =>
+                            handleApprovalAction(request._id, "approved")
+                          }
+                          disabled={isReqLoading}
                           className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:opacity-90"
                           style={{
                             backgroundColor: BASE_COLORS.success,
                             color: BASE_COLORS.white,
                           }}
                         >
-                          Approve Request
+                          {isReqLoading ? "Processing..." : "Approve Request"}
                         </button>
+
                         <button
-                          onClick={() => changeApproval(request._id, false)}
+                          onClick={() =>
+                            handleApprovalAction(request._id, "rejected")
+                          }
+                          disabled={isReqLoading}
                           className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:opacity-90 border-2"
                           style={{
                             backgroundColor: "transparent",
@@ -721,13 +764,16 @@ const RequestsAdmin = () => {
                             color: BASE_COLORS.error,
                           }}
                         >
-                          Reject
+                          {isReqLoading ? "Processing..." : "Reject"}
                         </button>
                       </>
                     ) : (
                       <>
                         <button
-                          onClick={() => changeApproval(request._id, false)}
+                          onClick={() =>
+                            handleApprovalAction(request._id, "pending")
+                          }
+                          disabled={isReqLoading}
                           className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:opacity-90 border-2"
                           style={{
                             backgroundColor: "transparent",
@@ -735,8 +781,9 @@ const RequestsAdmin = () => {
                             color: BASE_COLORS.warning,
                           }}
                         >
-                          Revoke Approval
+                          {isReqLoading ? "Processing..." : "Revoke Approval"}
                         </button>
+
                         <div
                           className="px-4 py-2 rounded-lg text-center text-base font-medium"
                           style={{
