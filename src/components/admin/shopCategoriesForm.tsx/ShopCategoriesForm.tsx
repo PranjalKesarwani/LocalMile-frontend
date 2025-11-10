@@ -266,7 +266,7 @@ const CategoryTree = () => {
           border: isSelected ? `3px solid ${BASE_COLORS.primary}` : "none",
           boxShadow: isSelected
             ? `0 0 0 3px ${BASE_COLORS.primary}20`
-            : "0 2px 4px rgba(0,0,0,0.1)",
+            : "0 2px 4px rgba(0,0,0,0.5)",
           transition: "all 0.2s ease",
           whiteSpace: "nowrap",
         }}
@@ -452,7 +452,7 @@ const CategoryTree = () => {
                       boxShadow:
                         selectedNode?.attributes?.id === treeData.attributes?.id
                           ? `0 0 0 3px ${BASE_COLORS.primary}20`
-                          : "0 2px 4px rgba(0,0,0,0.1)",
+                          : "0 2px 4px rgba(0,0,0,0.5)",
                       transition: "all 0.2s ease",
                       whiteSpace: "nowrap",
                     }}
@@ -505,7 +505,7 @@ const CategoryTree = () => {
                             borderRadius: "6px",
                             padding: "4px 8px",
                             transition: "all 0.2s ease",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor =

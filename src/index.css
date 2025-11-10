@@ -13,12 +13,15 @@
 
 body {
     font-size: 1.6rem;
+    background-color: #121212;
+    color: #E0E0E0;
 }
 
 html {
     font-size: 62.5%;
     scroll-behavior: smooth;
     height: auto;
+    background-color: #121212;
 }
 
 
@@ -29,11 +32,18 @@ input[type="number"]::-webkit-outer-spin-button {
     margin: 0;
 }
 
-input {
-    border: 1px solid #ccc;
+input, select, textarea {
+    border: 1px solid #424242;
+    background-color: #1E1E1E;
+    color: #E0E0E0;
     /* Add your desired border color */
     padding: 8px;
     /* Optional: Add padding to make the input look more visually appealing */
+}
+
+select option {
+    background-color: #1E1E1E;
+    color: #E0E0E0;
 }
 
 .showBorder {
@@ -62,7 +72,7 @@ input {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.66);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     z-index: 1;
     justify-content: center;
@@ -70,10 +80,11 @@ input {
 }
 
 .modal-content {
-    background: #fff;
+    background: #1E1E1E;
+    color: #E0E0E0;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .y-scrollbar {
@@ -87,8 +98,25 @@ input {
 
 
 .y-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #4a5568;
+    background-color: #424242;
     border-radius: 8px;
+}
 
+/* Dark mode scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
 
+::-webkit-scrollbar-track {
+    background: #1E1E1E;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555555;
 }
