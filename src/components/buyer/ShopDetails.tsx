@@ -1,15 +1,12 @@
-import React from 'react'
-import NavBuyer from './NavBuyer'
+import NavBuyer from "./NavBuyer";
 
 const ShopDetails = () => {
-    return (
-        <>
-            <NavBuyer/>
-            <div className="w-full h-full showBorder">
+  return (
+    <>
+      <NavBuyer />
+      <div className="w-full h-full showBorder"></div>
+    </>
+  );
+};
 
-            </div>
-        </>
-    )
-}
-
-export default ShopDetails
+export default ShopDetails;

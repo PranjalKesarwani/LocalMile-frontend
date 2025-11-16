@@ -1,7 +1,7 @@
-import axios from 'axios';
-import React, { useState } from 'react'
-import { BASE_URL, post_config } from '../../../Url';
-import { Requests, TCategory } from '../RequestsAdmin';
+import axios from "axios";
+import { useState } from "react";
+import { BASE_URL } from "../../../Url";
+import { Requests } from "../RequestsAdmin";
 
 type TProps = {
   // handleAddCategory:(category: string) => void;
@@ -9,111 +9,134 @@ type TProps = {
   // selectedCategories:string[];
   // handleRemoveCategory:( idx: number) => void;
   availableCategories: string[];
-  request: Requests
-}
+  request: Requests;
+};
 
 const RequestCard = ({ availableCategories, request }: TProps) => {
-
   console.log(request);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const handleRemoveCategory = (idx: number) => {
-
-
     selectedCategories.splice(idx, 1);
     setSelectedCategories((prev) => {
-      return [...prev]
+      return [...prev];
     });
-
-  }
+  };
 
   const handleAddCategory = (category: string) => {
     for (let i = 0; i < selectedCategories.length; i++) {
       if (selectedCategories[i] === category) {
-        alert('Category already added');
-        return
+        alert("Category already added");
+        return;
       }
     }
 
     setSelectedCategories((prev) => {
-
-      return [...prev, category] as string[]
-    })
-  }
+      return [...prev, category] as string[];
+    });
+  };
 
   const handleAcceptApproval = async () => {
-
     if (selectedCategories.length === 0) {
-      alert('Select atleast one category!');
+      alert("Select atleast one category!");
       return;
     }
     try {
-      const res = await axios.put(`${BASE_URL}/auth/seller-request-approval`, { selectedCategories, sellerId: request._id });
+      const res = await axios.put(`${BASE_URL}/auth/seller-request-approval`, {
+        selectedCategories,
+        sellerId: request._id,
+      });
       console.log(res.data);
-      alert("Approved")
-
-    } catch (error) {
-
-    }
-  }
-
+      alert("Approved");
+    } catch (error) {}
+  };
 
   return (
     <div className=" w-full p-2 flex flex-col gap-4 border-[1px] border-gray-400 rounded-md">
-
       <div className="p-1  flex text-[1.3rem] gap-4">
-        <span className="  p-1">Pin code: <strong>{request.pinCode}</strong></span>
-        <span className="  p-1">Phone: <strong>{request.phone}</strong></span>
-        <span className="  p-1">Seller Name: <strong>{request.sellerName}</strong></span>
-        <span className="  p-1">Shop Name: <strong>{request.shopName}</strong></span>
+        <span className="  p-1">
+          Pin code: <strong>{request.pinCode}</strong>
+        </span>
+        <span className="  p-1">
+          Phone: <strong>{request.phone}</strong>
+        </span>
+        <span className="  p-1">
+          Seller Name: <strong>{request.sellerName}</strong>
+        </span>
+        <span className="  p-1">
+          Shop Name: <strong>{request.shopName}</strong>
+        </span>
       </div>
       <div className="p-1  flex text-[1.3rem] gap-4">
-        <span className="  p-1">Shop Address: <strong>{request.shopAddress}</strong></span>
-        <span className="  p-1">Landmark: <strong>{request.landmark}</strong></span>
-
+        <span className="  p-1">
+          Shop Address: <strong>{request.shopAddress}</strong>
+        </span>
+        <span className="  p-1">
+          Landmark: <strong>{request.landmark}</strong>
+        </span>
       </div>
       <hr />
       <div className="p-1  flex flex-col text-[1.3rem] gap-4 ">
-        <span className="  p-1"> <strong>Selected Categories</strong> </span>
+        <span className="  p-1">
+          {" "}
+          <strong>Selected Categories</strong>{" "}
+        </span>
         <ul className=" flex overflow-x-auto space-x-4 p-4 w-full  ">
-          {
-            selectedCategories.length === 0 ? <><div className="w-full text-5xl text-gray-400">Select atleast 1 category</div></> : (
-              selectedCategories.map((category, idx) => {
-                return (
-                  <div key={idx} className="border border-gray-300 min-w-[15rem] text-center p-2 rounded cursor-pointer flex justify-between bg-green-200 gap-5"><span className="">{category} </span><span className="   rounded-full hover:bg-red-700 hover:text-white w-[2rem] h-[2rem] flex items-center justify-center" onClick={() => handleRemoveCategory(idx)}><i className="fa-solid fa-xmark"></i></span></div>
-
-                )
-              })
-            )
-
-          }
+          {selectedCategories.length === 0 ? (
+            <>
+              <div className="w-full text-5xl text-gray-400">
+                Select atleast 1 category
+              </div>
+            </>
+          ) : (
+            selectedCategories.map((category, idx) => {
+              return (
+                <div
+                  key={idx}
+                  className="border border-gray-300 min-w-[15rem] text-center p-2 rounded cursor-pointer flex justify-between bg-green-200 gap-5"
+                >
+                  <span className="">{category} </span>
+                  <span
+                    className="   rounded-full hover:bg-red-700 hover:text-white w-[2rem] h-[2rem] flex items-center justify-center"
+                    onClick={() => handleRemoveCategory(idx)}
+                  >
+                    <i className="fa-solid fa-xmark"></i>
+                  </span>
+                </div>
+              );
+            })
+          )}
         </ul>
-
       </div>
       <hr />
       <div className=" w-full ">
         <h1 className="font-bold text-xl w-full">Available categories:</h1>
         <ul className=" flex overflow-x-auto space-x-4 p-4 w-full  ">
-          {
-            availableCategories.map((category, idx) => {
-              return (
-                <div key={idx} className="border border-gray-300 min-w-[15rem] text-center p-2 rounded cursor-pointer" onClick={() => handleAddCategory(category)}>{category}</div>
-
-              )
-            })
-          }
-
+          {availableCategories.map((category, idx) => {
+            return (
+              <div
+                key={idx}
+                className="border border-gray-300 min-w-[15rem] text-center p-2 rounded cursor-pointer"
+                onClick={() => handleAddCategory(category)}
+              >
+                {category}
+              </div>
+            );
+          })}
         </ul>
       </div>
       <hr />
       <div className="w-full flex justify-end">
-
-        <button className="bg-green-600 text-white text-2xl py-2 w-[15rem] rounded-lg mr-8 mb-3" onClick={handleAcceptApproval}>Approve Request</button>
+        <button
+          className="bg-green-600 text-white text-2xl py-2 w-[15rem] rounded-lg mr-8 mb-3"
+          onClick={handleAcceptApproval}
+        >
+          Approve Request
+        </button>
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default RequestCard
+export default RequestCard;
