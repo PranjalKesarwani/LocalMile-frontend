@@ -36,6 +36,9 @@ const AllSellersAdmin = () => {
     "all" | "active" | "inactive" | "pending"
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  const isSearchMode = debouncedSearch.trim().length > 0;
+
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -94,7 +97,7 @@ const AllSellersAdmin = () => {
       if (res.status === 200 && Array.isArray(res.data?.sellers)) {
         setSellers(res.data.sellers.map(normalizeSeller));
         setTotalPages(res.data.pagination.totalPages);
-        setCurrentPage(res.data.pagination.currentPage);
+        // setCurrentPage(res.data.pagination.currentPage);
       } else {
         toast.error("Unexpected response from server");
       }
@@ -121,33 +124,75 @@ const AllSellersAdmin = () => {
     }
   };
 
+  const searchSellers = async (page = 1) => {
+    setLoading(true);
+    try {
+      const res = await api.get("/admin/sellers/search", {
+        params: {
+          q: debouncedSearch,
+          page,
+          limit,
+        },
+      });
+
+      if (res.status === 200 && Array.isArray(res.data?.sellers)) {
+        setSellers(res.data.sellers.map(normalizeSeller));
+        setTotalPages(res.data.pagination.totalPages);
+        // setCurrentPage(res.data.pagination.currentPage);
+      } else {
+        toast.error("Unexpected search response");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Seller search failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    getAllSellers(currentPage);
-  }, [currentPage]);
+    const fetchData = async () => {
+      if (isSearchMode) {
+        await searchSellers(currentPage);
+      } else {
+        await getAllSellers(currentPage);
+      }
+    };
+
+    fetchData();
+  }, [currentPage, searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     getDashboardOverview();
   }, []);
+
   // safe access helpers for filtering/search
   const getDisplayName = (seller: Seller) =>
     seller.sellerName || seller.name || "";
   const getDisplayEmail = (seller: Seller) => seller.email || "";
   const getDisplayShopName = (seller: Seller) => seller.shopName || "";
 
-  const filteredSellers = sellers.filter((seller) => {
-    const matchesFilter = filter === "all" || seller.status === filter;
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return matchesFilter;
+  // const filteredSellers = sellers.filter((seller) => {
+  //   const matchesFilter = filter === "all" || seller.status === filter;
+  //   const q = searchQuery.trim().toLowerCase();
+  //   if (!q) return matchesFilter;
 
-    const matchesSearch =
-      getDisplayName(seller).toLowerCase().includes(q) ||
-      getDisplayEmail(seller).toLowerCase().includes(q) ||
-      getDisplayShopName(seller).toLowerCase().includes(q) ||
-      (seller.mobile || "").includes(q) ||
-      (seller.upiId || "").toLowerCase().includes(q);
+  //   const matchesSearch =
+  //     getDisplayName(seller).toLowerCase().includes(q) ||
+  //     getDisplayEmail(seller).toLowerCase().includes(q) ||
+  //     getDisplayShopName(seller).toLowerCase().includes(q) ||
+  //     (seller.mobile || "").includes(q) ||
+  //     (seller.upiId || "").toLowerCase().includes(q);
 
-    return matchesFilter && matchesSearch;
-  });
+  //   return matchesFilter && matchesSearch;
+  // });
 
   const statusColors: Record<"active" | "inactive" | "pending", string> = {
     active: BASE_COLORS.success,
@@ -182,7 +227,10 @@ const AllSellersAdmin = () => {
             type="text"
             placeholder="Search by name, email, phone, shop name or UPI..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full px-4 py-2 rounded-lg border-2 focus:outline-none focus:ring-2"
             style={{
               backgroundColor: BASE_COLORS.white,
@@ -304,7 +352,7 @@ const AllSellersAdmin = () => {
           >
             Loading...
           </div>
-        ) : filteredSellers.length === 0 ? (
+        ) : sellers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
@@ -389,7 +437,7 @@ const AllSellersAdmin = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredSellers.map((seller, index) => (
+                {sellers.map((seller, index) => (
                   <tr
                     key={seller._id}
                     className="border-t transition-colors hover:bg-opacity-50"
