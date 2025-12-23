@@ -22,6 +22,14 @@ interface Seller {
   joinDate?: string;
 }
 
+interface DashboardStats {
+  totalSellers: number;
+  activeSellers: number;
+  pendingSellers: number;
+  sellersWithoutShop: number;
+  sellersWithShopNoProduct: number;
+}
+
 const AllSellersAdmin = () => {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [filter, setFilter] = useState<
@@ -32,6 +40,13 @@ const AllSellersAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(20);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalSellers: 0,
+    activeSellers: 0,
+    pendingSellers: 0,
+    sellersWithoutShop: 0,
+    sellersWithShopNoProduct: 0,
+  });
   // map backend seller object to our Seller interface safely
   const normalizeSeller = (r: any): Seller => {
     const mobile = r.mobile || r.phone || "";
@@ -90,9 +105,29 @@ const AllSellersAdmin = () => {
     }
   };
 
+  const getDashboardOverview = async () => {
+    try {
+      const res = await api.get("/admin/dashboard/overview");
+
+      if (res.status === 200 && res.data?.data) {
+        setDashboardStats(res.data.data);
+      } else {
+        toast.error("Failed to load dashboard stats");
+      }
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Dashboard stats fetch failed"
+      );
+    }
+  };
+
   useEffect(() => {
     getAllSellers(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+    getDashboardOverview();
+  }, []);
   // safe access helpers for filtering/search
   const getDisplayName = (seller: Seller) =>
     seller.sellerName || seller.name || "";
@@ -192,7 +227,7 @@ const AllSellersAdmin = () => {
           style={{ backgroundColor: BASE_COLORS.white }}
         >
           <p
-            className="text-sm font-medium mb-1"
+            className="texxt-base font-medium mb-1"
             style={{ color: BASE_COLORS.gray }}
           >
             Total Sellers
@@ -201,59 +236,62 @@ const AllSellersAdmin = () => {
             className="text-2xl font-bold"
             style={{ color: BASE_COLORS.darkText }}
           >
-            {sellers.length}
+            {dashboardStats.totalSellers}
           </p>
         </div>
+
         <div
           className="rounded-lg p-4 shadow-md"
           style={{ backgroundColor: BASE_COLORS.white }}
         >
           <p
-            className="text-sm font-medium mb-1"
+            className="texxt-base font-medium mb-1"
             style={{ color: BASE_COLORS.gray }}
           >
-            Active
+            Active Sellers
           </p>
           <p
             className="text-2xl font-bold"
             style={{ color: BASE_COLORS.success }}
           >
-            {sellers.filter((s) => s.status === "active").length}
+            {dashboardStats.activeSellers}
           </p>
         </div>
+
         <div
           className="rounded-lg p-4 shadow-md"
           style={{ backgroundColor: BASE_COLORS.white }}
         >
           <p
-            className="text-sm font-medium mb-1"
+            className="texxt-base font-medium mb-1"
             style={{ color: BASE_COLORS.gray }}
           >
-            Pending
+            Pending Sellers
           </p>
           <p
             className="text-2xl font-bold"
             style={{ color: BASE_COLORS.warning }}
           >
-            {sellers.filter((s) => s.status === "pending").length}
+            {dashboardStats.pendingSellers}
           </p>
         </div>
+
         <div
           className="rounded-lg p-4 shadow-md"
           style={{ backgroundColor: BASE_COLORS.white }}
         >
           <p
-            className="text-sm font-medium mb-1"
+            className="texxt-base font-medium mb-1"
             style={{ color: BASE_COLORS.gray }}
           >
-            Inactive
+            Shop Not Live
           </p>
           <p className="text-2xl font-bold" style={{ color: BASE_COLORS.gray }}>
-            {sellers.filter((s) => s.status === "inactive").length}
+            {dashboardStats.sellersWithoutShop +
+              dashboardStats.sellersWithShopNoProduct}
           </p>
         </div>
       </div>
-
       {/* Sellers Table */}
       <div
         className="rounded-xl shadow-lg overflow-hidden"
@@ -389,7 +427,7 @@ const AllSellersAdmin = () => {
                             {getDisplayName(seller)}
                           </p>
                           <p
-                            className="text-sm"
+                            className="texxt-base"
                             style={{ color: BASE_COLORS.gray }}
                           >
                             {getDisplayEmail(seller)}
