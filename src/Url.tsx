@@ -1,8 +1,6 @@
+// export const BASE_URL = "https://localmile-backend.onrender.com/api/v1";
 export const BASE_URL = "http://localhost:8080/api/v1";
-// export const BASE_SOCKET_URL = 'https://heyamigo.onrender.com'
-// export const BASE_URL = 'https://heyamigo.onrender.com';
-// export const BASE_SOCKET_URL = 'https://heyamigov2s.onrender.com'
-// export const BASE_URL = 'https://heyamigov2s.onrender.com';
+// export const BASE_URL = "https://api.unlocl.com/api/v1";
 
 export const post_config = {
   headers: {

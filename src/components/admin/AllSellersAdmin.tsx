@@ -29,13 +29,16 @@ const AllSellersAdmin = () => {
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(20);
   // map backend seller object to our Seller interface safely
   const normalizeSeller = (r: any): Seller => {
     const mobile = r.mobile || r.phone || "";
     const sellerName = r.sellerName || r.name || "";
     const basicAddress = r.basicAddress || r.shopAddress || "";
     const createdAt = r.createdAt || r.joinDate || new Date().toISOString();
+
     // derive status if backend doesn't provide it explicitly
     const status =
       r.status ||
@@ -66,33 +69,30 @@ const AllSellersAdmin = () => {
     };
   };
 
-  const getAllSellers = async () => {
+  const getAllSellers = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get("/admin/get-all-sellers");
-      // expected shape: { success: true, sellers: [...] }
+      const res = await api.get("/admin/get-all-sellers", {
+        params: { page, limit },
+      });
+
       if (res.status === 200 && Array.isArray(res.data?.sellers)) {
-        const normalized = res.data.sellers.map((s: any) => normalizeSeller(s));
-        setSellers(normalized);
+        setSellers(res.data.sellers.map(normalizeSeller));
+        setTotalPages(res.data.pagination.totalPages);
+        setCurrentPage(res.data.pagination.currentPage);
       } else {
         toast.error("Unexpected response from server");
       }
     } catch (error: any) {
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong";
-      toast.error(msg);
+      toast.error(error?.response?.data?.message || "Failed to fetch sellers");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    getAllSellers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+    getAllSellers(currentPage);
+  }, [currentPage]);
   // safe access helpers for filtering/search
   const getDisplayName = (seller: Seller) =>
     seller.sellerName || seller.name || "";
@@ -301,40 +301,49 @@ const AllSellersAdmin = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
-                <tr style={{ backgroundColor: BASE_COLORS.lightBackground }}>
+              <thead className="">
+                <tr
+                  className="text-xl"
+                  style={{ backgroundColor: BASE_COLORS.lightBackground }}
+                >
                   <th
-                    className="px-6 py-4 text-left text-sm font-semibold"
+                    className="px-6 py-4 text-left font-semibold"
+                    style={{ color: BASE_COLORS.darkText }}
+                  >
+                    Sr. No.
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left font-semibold"
                     style={{ color: BASE_COLORS.darkText }}
                   >
                     Seller Name
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-semibold"
+                    className="px-6 py-4 text-left font-semibold"
                     style={{ color: BASE_COLORS.darkText }}
                   >
                     Shop Name
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-semibold"
+                    className="px-6 py-4 text-left font-semibold"
                     style={{ color: BASE_COLORS.darkText }}
                   >
                     Contact
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-semibold"
+                    className="px-6 py-4 text-left font-semibold"
                     style={{ color: BASE_COLORS.darkText }}
                   >
                     Status
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-semibold"
+                    className="px-6 py-4 text-left font-semibold"
                     style={{ color: BASE_COLORS.darkText }}
                   >
                     Join Date
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-sm font-semibold"
+                    className="px-6 py-4 text-left font-semibold"
                     style={{ color: BASE_COLORS.darkText }}
                   >
                     Actions
@@ -354,6 +363,16 @@ const AllSellersAdmin = () => {
                           : BASE_COLORS.lightBackground,
                     }}
                   >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <p
+                          className="font-medium"
+                          style={{ color: BASE_COLORS.darkText }}
+                        >
+                          {(currentPage - 1) * limit + index + 1}
+                        </p>
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div
@@ -391,9 +410,9 @@ const AllSellersAdmin = () => {
                         {seller.mobile || seller.phone || "N/A"}
                       </p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-7 py-4">
                       <span
-                        className="px-3 py-1 rounded-full text-xs font-medium"
+                        className="px-4 py-1 rounded-full text-base font-medium"
                         style={{
                           backgroundColor: `${
                             statusColors[seller.status || "pending"]
@@ -413,7 +432,7 @@ const AllSellersAdmin = () => {
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        className="px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-90"
+                        className="px-3 py-1 rounded-lg text-lg font-medium transition-all duration-200 hover:opacity-90"
                         style={{
                           backgroundColor: BASE_COLORS.primary,
                           color: BASE_COLORS.white,
@@ -436,6 +455,40 @@ const AllSellersAdmin = () => {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center px-6 py-4">
+          <p className="text-md" style={{ color: BASE_COLORS.gray }}>
+            Page {currentPage} of {totalPages}
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="px-4 py-2 rounded-lg text-base font-medium disabled:opacity-50"
+              style={{
+                backgroundColor: BASE_COLORS.lightBackground,
+                color: BASE_COLORS.darkText,
+              }}
+            >
+              Previous
+            </button>
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="px-4 py-2 rounded-lg text-base font-medium disabled:opacity-50"
+              style={{
+                backgroundColor: BASE_COLORS.primary,
+                color: BASE_COLORS.white,
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
